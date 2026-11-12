@@ -34,24 +34,24 @@ export const Header: React.FC<HeaderProps> = ({
 
   return (
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-neutral-200 transition-all shadow-xs">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-20">
+      <div className="max-w-7xl mx-auto px-2.5 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16 sm:h-20 gap-1 sm:gap-4">
           
-          {/* Logo */}
-          <div className="flex items-center gap-3">
+          {/* Logo: Site Icon & Samuel Soren strictly in ONE LINE on mobile */}
+          <div className="flex items-center min-w-0 shrink">
             <button
               onClick={() => handleNavClick('home')}
-              className="flex items-center gap-2 text-left group focus:outline-hidden"
+              className="flex items-center gap-1.5 sm:gap-2.5 text-left group focus:outline-hidden flex-nowrap"
               aria-label="Pastor Samuel Soren Homepage"
             >
-              <div className="w-10 h-10 rounded-sm bg-[#C83338] text-white flex items-center justify-center font-bold text-xl tracking-tighter shadow-xs">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-sm bg-[#C83338] text-white flex items-center justify-center font-bold text-sm sm:text-xl tracking-tighter shadow-xs shrink-0">
                 SS
               </div>
-              <div className="flex flex-col">
-                <span className="font-heading font-extrabold text-xl sm:text-2xl tracking-wider leading-none text-[#252525]">
+              <div className="flex flex-col justify-center min-w-0">
+                <span className="font-heading font-extrabold text-[15px] sm:text-2xl tracking-tight sm:tracking-wider leading-none text-[#252525] whitespace-nowrap">
                   SAMUEL <span className="text-[#C83338]">SOREN</span>
                 </span>
-                <span className="text-[10px] uppercase font-semibold tracking-widest text-neutral-500 mt-1">
+                <span className="hidden sm:block text-[10px] uppercase font-semibold tracking-widest text-neutral-500 mt-1">
                   MINISTRY &middot; GODDA
                 </span>
               </div>
@@ -82,7 +82,7 @@ export const Header: React.FC<HeaderProps> = ({
           </nav>
 
           {/* Right Action Icons */}
-          <div className="flex items-center space-x-2 sm:space-x-3">
+          <div className="flex items-center space-x-1 sm:space-x-3 shrink-0">
             
             {/* Social Icons (Desktop) */}
             <div className="hidden xl:flex items-center space-x-2 text-neutral-500 pr-2 border-r border-neutral-200">
@@ -118,7 +118,7 @@ export const Header: React.FC<HeaderProps> = ({
             {/* Search Trigger */}
             <button
               onClick={onOpenSearch}
-              className="p-2 text-neutral-600 hover:text-[#C83338] transition-colors rounded-sm hover:bg-neutral-100"
+              className="p-1.5 sm:p-2 text-neutral-600 hover:text-[#C83338] transition-colors rounded-sm hover:bg-neutral-100"
               aria-label="Search articles and ministries"
             >
               <Search className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -127,12 +127,12 @@ export const Header: React.FC<HeaderProps> = ({
             {/* Cart Icon */}
             <button
               onClick={() => setIsCartOpen(true)}
-              className="p-2 text-neutral-600 hover:text-[#C83338] transition-colors rounded-sm hover:bg-neutral-100 relative"
+              className="p-1.5 sm:p-2 text-neutral-600 hover:text-[#C83338] transition-colors rounded-sm hover:bg-neutral-100 relative"
               aria-label={`Shopping cart with ${totalItems} items`}
             >
               <ShoppingBag className="w-4 h-4 sm:w-5 sm:h-5" />
               {totalItems > 0 && (
-                <span className="absolute -top-1 -right-1 bg-[#C83338] text-white text-[10px] font-bold rounded-full h-4 w-4 flex items-center justify-center shadow-xs">
+                <span className="absolute -top-1 -right-1 bg-[#C83338] text-white text-[9px] sm:text-[10px] font-bold rounded-full h-4 w-4 flex items-center justify-center shadow-xs">
                   {totalItems}
                 </span>
               )}
@@ -142,22 +142,27 @@ export const Header: React.FC<HeaderProps> = ({
             {onOpenDonate && (
               <button
                 onClick={onOpenDonate}
-                className="px-3.5 py-2 sm:px-4 sm:py-2.5 bg-[#C83338] hover:bg-[#b0282d] text-white text-xs font-bold tracking-wider uppercase rounded-md shadow-sm transition flex items-center space-x-1.5 group"
+                className="px-2 py-1.5 sm:px-4 sm:py-2 bg-[#C83338] hover:bg-[#b0282d] text-white text-[11px] sm:text-xs font-bold tracking-wider uppercase rounded-md shadow-xs transition flex items-center space-x-1 group shrink-0"
                 aria-label="Make a Donation or Offering"
               >
                 <span className="group-hover:scale-110 transition-transform">❤️</span>
-                <span>DONATE</span>
+                <span className="hidden sm:inline">DONATE</span>
+                <span className="sm:hidden">GIVE</span>
               </button>
             )}
 
-            {/* Mobile Hamburger Toggle */}
+            {/* Mobile Hamburger Toggle - Guaranteed fully visible */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="lg:hidden p-2 text-neutral-700 hover:text-[#C83338] focus:outline-hidden"
+              className="lg:hidden p-1.5 sm:p-2 text-neutral-800 hover:text-[#C83338] hover:bg-neutral-100 rounded-sm focus:outline-hidden shrink-0 flex items-center justify-center"
               aria-label={mobileMenuOpen ? 'Close Navigation Menu' : 'Open Navigation Menu'}
               aria-expanded={mobileMenuOpen}
             >
-              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              {mobileMenuOpen ? (
+                <X className="w-6 h-6 text-neutral-900" />
+              ) : (
+                <Menu className="w-6 h-6 text-neutral-900" />
+              )}
             </button>
 
           </div>
