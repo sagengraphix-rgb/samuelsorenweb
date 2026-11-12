@@ -850,33 +850,156 @@ app.get('/api/admin/products', authMiddleware, (_req: AuthenticatedRequest, res:
 });
 
 app.post('/api/admin/products', authMiddleware, requireSuperAdmin, (req: AuthenticatedRequest, res: Response) => {
-  const { title, description, price, discountPrice, image, category, stock, productType, downloadUrl } = req.body;
+  const {
+    title,
+    slug,
+    shortDescription,
+    description,
+    price,
+    discountPrice,
+    salePrice,
+    saleStartDate,
+    saleEndDate,
+    sku,
+    image,
+    gallery,
+    category,
+    tags,
+    stock,
+    manageStock,
+    stockStatus,
+    lowStockThreshold,
+    allowBackorders,
+    soldIndividually,
+    weightKg,
+    dimensions,
+    shippingClass,
+    productType,
+    isVirtual,
+    isDownloadable,
+    downloadUrl,
+    downloadFiles,
+    downloadLimit,
+    downloadExpiryDays,
+    featured,
+    catalogVisibility,
+    attributes,
+    variations,
+    upsellIds,
+    crossSellIds,
+    purchaseNote,
+    status
+  } = req.body;
+
   if (!title || price === undefined) {
     res.status(400).json({ error: 'Title and price are required.' });
     return;
   }
 
+  const generatedSku = sku?.trim() || `SS-${category ? category.substring(0, 3).toUpperCase() : 'RES'}-${Math.floor(1000 + Math.random() * 9000)}`;
+
   const newProduct: Product = {
     id: `prod_${Date.now()}`,
     title: title.trim(),
-    slug: slugify(title),
+    slug: slug?.trim() || slugify(title),
+    shortDescription: shortDescription?.trim() || '',
     description: description?.trim() || '',
     price: Number(price),
-    discountPrice: discountPrice ? Number(discountPrice) : undefined,
+    discountPrice: salePrice ? Number(salePrice) : (discountPrice ? Number(discountPrice) : undefined),
+    salePrice: salePrice ? Number(salePrice) : (discountPrice ? Number(discountPrice) : undefined),
+    saleStartDate,
+    saleEndDate,
+    sku: generatedSku,
     image:
       image ||
       'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?q=80&w=800&auto=format&fit=crop',
+    gallery: Array.isArray(gallery) ? gallery : [],
     category: category || 'Books',
+    tags: Array.isArray(tags) ? tags : [],
     stock: stock !== undefined ? Number(stock) : 10,
-    productType: productType === 'digital' ? 'digital' : 'physical',
+    manageStock: manageStock !== undefined ? Boolean(manageStock) : true,
+    stockStatus: stockStatus || (Number(stock) > 0 ? 'instock' : 'outofstock'),
+    lowStockThreshold: lowStockThreshold !== undefined ? Number(lowStockThreshold) : 5,
+    allowBackorders: allowBackorders || 'no',
+    soldIndividually: Boolean(soldIndividually),
+    weightKg: weightKg ? Number(weightKg) : undefined,
+    dimensions,
+    shippingClass: shippingClass || 'standard',
+    productType: productType || (isDownloadable ? 'digital' : 'simple'),
+    isVirtual: Boolean(isVirtual),
+    isDownloadable: Boolean(isDownloadable),
     downloadUrl: downloadUrl?.trim() || '',
-    status: 'active'
+    downloadFiles: Array.isArray(downloadFiles) ? downloadFiles : [],
+    downloadLimit: downloadLimit ? Number(downloadLimit) : undefined,
+    downloadExpiryDays: downloadExpiryDays ? Number(downloadExpiryDays) : undefined,
+    featured: Boolean(featured),
+    catalogVisibility: catalogVisibility || 'visible',
+    status: status || 'active',
+    rating: 5,
+    ratingCount: 1,
+    reviews: [
+      {
+        id: `rev_${Date.now()}`,
+        author: 'Pastor Samuel Soren Office',
+        rating: 5,
+        comment: 'Official blessed ministry publication released for spiritual growth and discipleship.',
+        verifiedPurchase: true,
+        createdAt: new Date().toISOString()
+      }
+    ],
+    attributes: Array.isArray(attributes) ? attributes : [],
+    variations: Array.isArray(variations) ? variations : [],
+    upsellIds: Array.isArray(upsellIds) ? upsellIds : [],
+    crossSellIds: Array.isArray(crossSellIds) ? crossSellIds : [],
+    purchaseNote: purchaseNote?.trim() || '',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
   };
 
   db.mutate((data) => {
     data.products.push(newProduct);
   });
   res.status(201).json(newProduct);
+});
+
+// Customer Product Reviews
+app.post('/api/products/:id/reviews', (req: Request, res: Response) => {
+  const { id } = req.params;
+  const { author, email, rating, comment } = req.body;
+
+  if (!author || !rating || !comment) {
+    res.status(400).json({ error: 'Author, rating, and review comment are required.' });
+    return;
+  }
+
+  let updatedProduct: Product | null = null;
+  db.mutate((data) => {
+    const product = data.products.find((p) => p.id === id);
+    if (product) {
+      if (!product.reviews) product.reviews = [];
+      const newReview = {
+        id: `rev_${Date.now()}`,
+        author: author.trim(),
+        email: email?.trim(),
+        rating: Math.min(5, Math.max(1, Number(rating))),
+        comment: comment.trim(),
+        verifiedPurchase: true,
+        createdAt: new Date().toISOString()
+      };
+      product.reviews.unshift(newReview);
+      product.ratingCount = product.reviews.length;
+      const sumRatings = product.reviews.reduce((acc, r) => acc + r.rating, 0);
+      product.rating = Number((sumRatings / product.reviews.length).toFixed(1));
+      updatedProduct = product;
+    }
+  });
+
+  if (!updatedProduct) {
+    res.status(404).json({ error: 'Product not found' });
+    return;
+  }
+
+  res.status(201).json(updatedProduct);
 });
 
 app.put('/api/admin/products/:id', authMiddleware, requireSuperAdmin, (req: AuthenticatedRequest, res: Response) => {

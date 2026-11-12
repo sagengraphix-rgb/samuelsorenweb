@@ -43,24 +43,99 @@ export interface Ministry {
   updatedAt: string;
 }
 
+export interface ProductAttribute {
+  id: string;
+  name: string; // e.g. "Format", "Language", "Binding"
+  values: string[]; // e.g. ["Paperback", "Hardcover", "PDF eBook"]
+  visibleOnProductPage: boolean;
+  usedForVariations: boolean;
+}
+
+export interface ProductVariation {
+  id: string;
+  title: string;
+  sku?: string;
+  price: number;
+  salePrice?: number;
+  stock: number;
+  stockStatus: 'instock' | 'outofstock' | 'onbackorder';
+  image?: string;
+  attributes: Record<string, string>; // e.g. { Format: "Hardcover", Language: "Santali" }
+}
+
+export interface ProductReview {
+  id: string;
+  author: string;
+  email?: string;
+  rating: number; // 1 to 5
+  comment: string;
+  verifiedPurchase?: boolean;
+  createdAt: string;
+}
+
+export interface DownloadableFile {
+  id: string;
+  name: string;
+  url: string;
+}
+
 export interface Product {
   id: string;
   title: string;
   slug: string;
+  shortDescription?: string;
   description: string;
-  price: number;
-  discountPrice?: number;
+  price: number; // Regular price
+  discountPrice?: number; // Sale price
+  salePrice?: number;
+  saleStartDate?: string;
+  saleEndDate?: string;
+  sku?: string;
   image: string;
+  gallery?: string[];
   category: string;
+  tags?: string[];
   stock: number;
-  productType: 'physical' | 'digital';
+  manageStock?: boolean;
+  stockStatus?: 'instock' | 'outofstock' | 'onbackorder';
+  lowStockThreshold?: number;
+  allowBackorders?: 'no' | 'notify' | 'yes';
+  soldIndividually?: boolean;
+  weightKg?: number;
+  dimensions?: {
+    length: number;
+    width: number;
+    height: number;
+  };
+  shippingClass?: string;
+  productType: 'physical' | 'digital' | 'simple' | 'variable' | 'virtual' | 'grouped';
+  isVirtual?: boolean;
+  isDownloadable?: boolean;
   downloadUrl?: string;
-  status: 'active' | 'archived';
+  downloadFiles?: DownloadableFile[];
+  downloadLimit?: number;
+  downloadExpiryDays?: number;
+  featured?: boolean;
+  catalogVisibility?: 'visible' | 'catalog' | 'search' | 'hidden';
+  status: 'active' | 'archived' | 'draft';
+  rating?: number;
+  ratingCount?: number;
+  reviews?: ProductReview[];
+  attributes?: ProductAttribute[];
+  variations?: ProductVariation[];
+  upsellIds?: string[];
+  crossSellIds?: string[];
+  purchaseNote?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface CartItem {
   product: Product;
   quantity: number;
+  variationId?: string;
+  selectedAttributes?: Record<string, string>;
+  effectivePrice?: number;
 }
 
 export interface OrderItem {

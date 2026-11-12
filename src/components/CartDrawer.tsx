@@ -79,13 +79,17 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ onNavigate }) => {
             ) : (
               cart.map((item) => {
                 const unitPrice =
-                  item.product.discountPrice !== undefined && item.product.discountPrice > 0
+                  item.effectivePrice !== undefined
+                    ? item.effectivePrice
+                    : item.product.discountPrice !== undefined && item.product.discountPrice > 0
                     ? item.product.discountPrice
                     : item.product.price;
 
+                const itemKey = item.variationId ? `${item.product.id}_${item.variationId}` : item.product.id;
+
                 return (
                   <div
-                    key={item.product.id}
+                    key={itemKey}
                     className="flex gap-4 p-3 bg-neutral-50 rounded-sm border border-neutral-200"
                   >
                     <img
@@ -100,22 +104,33 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ onNavigate }) => {
                             {item.product.title}
                           </h4>
                           <button
-                            onClick={() => removeFromCart(item.product.id)}
+                            onClick={() => removeFromCart(item.product.id, item.variationId)}
                             className="text-neutral-400 hover:text-red-600 p-1 shrink-0"
                             aria-label={`Remove ${item.product.title} from cart`}
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
                         </div>
-                        <span className="text-[10px] text-neutral-500 uppercase tracking-wider">
-                          {item.product.productType === 'digital' ? 'Digital Download' : 'Physical Book'}
-                        </span>
+                        <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
+                          <span className="text-[10px] text-neutral-500 uppercase tracking-wider">
+                            {item.product.productType === 'digital' ? 'Digital Download' : 'Physical'}
+                          </span>
+                          {item.selectedAttributes &&
+                            Object.entries(item.selectedAttributes).map(([k, v]) => (
+                              <span
+                                key={k}
+                                className="text-[10px] bg-red-50 text-[#C83338] px-1.5 py-0.2 rounded font-semibold"
+                              >
+                                {k}: {v}
+                              </span>
+                            ))}
+                        </div>
                       </div>
 
                       <div className="flex items-center justify-between pt-2">
                         <div className="flex items-center border border-neutral-300 rounded-xs bg-white">
                           <button
-                            onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
+                            onClick={() => updateQuantity(item.product.id, item.quantity - 1, item.variationId)}
                             className="p-1 hover:bg-neutral-100 text-neutral-600"
                             aria-label="Decrease quantity"
                           >
@@ -125,7 +140,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ onNavigate }) => {
                             {item.quantity}
                           </span>
                           <button
-                            onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
+                            onClick={() => updateQuantity(item.product.id, item.quantity + 1, item.variationId)}
                             className="p-1 hover:bg-neutral-100 text-neutral-600"
                             aria-label="Increase quantity"
                           >
