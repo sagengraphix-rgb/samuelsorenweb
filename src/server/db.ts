@@ -1,0 +1,795 @@
+import fs from 'fs';
+import path from 'path';
+
+export interface User {
+  uid: string;
+  name: string;
+  email: string;
+  role: 'superadmin' | 'editor';
+  passwordHash: string; // plain demo check or hash
+  resetToken?: string;
+  resetTokenExpires?: string;
+  createdAt: string;
+}
+
+export interface Blog {
+  id: string;
+  title: string;
+  slug: string;
+  excerpt: string;
+  content: string;
+  featuredImage: string;
+  category: string;
+  tags: string[];
+  author: string;
+  scriptureReference?: string;
+  status: 'published' | 'draft' | 'scheduled';
+  publishedAt: string;
+  createdAt: string;
+  updatedAt: string;
+  seoTitle?: string;
+  seoDescription?: string;
+}
+
+export interface Ministry {
+  id: string;
+  title: string;
+  slug: string;
+  tagline: string;
+  description: string;
+  content: string;
+  scripture: string;
+  image: string;
+  leader?: string;
+  schedule?: string;
+  status: 'published' | 'draft';
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Product {
+  id: string;
+  title: string;
+  slug: string;
+  description: string;
+  price: number;
+  discountPrice?: number;
+  image: string;
+  category: string;
+  stock: number;
+  productType: 'physical' | 'digital';
+  downloadUrl?: string;
+  status: 'active' | 'archived';
+}
+
+export interface Order {
+  id: string;
+  customerName: string;
+  email: string;
+  phone: string;
+  address?: string;
+  items: Array<{
+    productId: string;
+    title: string;
+    price: number;
+    quantity: number;
+    subtotal: number;
+    productType: 'physical' | 'digital';
+    downloadUrl?: string;
+  }>;
+  subtotal: number;
+  shipping: number;
+  total: number;
+  paymentMethod: string;
+  paymentStatus: 'pending' | 'verified' | 'failed';
+  paymentReference?: string;
+  orderStatus: 'new' | 'processing' | 'shipped' | 'completed' | 'cancelled';
+  createdAt: string;
+}
+
+export interface ContactSubmission {
+  id: string;
+  fullName: string;
+  email: string;
+  phone?: string;
+  category: 'General Inquiry' | 'Prayer Request' | 'Speaking Invitation' | 'Ministry Inquiry' | 'Other';
+  subject: string;
+  message: string;
+  status: 'new' | 'read' | 'replied' | 'archived';
+  createdAt: string;
+}
+
+export interface NewsletterSubscriber {
+  id: string;
+  email: string;
+  subscribedAt: string;
+  status: 'active' | 'unsubscribed';
+}
+
+export interface Donation {
+  id: string;
+  donorName: string;
+  email: string;
+  phone?: string;
+  cause: string;
+  amount: number;
+  frequency: 'one-time' | 'monthly';
+  paymentMethod: 'upi' | 'razorpay_qr';
+  transactionId?: string;
+  upiId?: string;
+  prayerRequest?: string;
+  isAnonymous?: boolean;
+  status: 'verified' | 'pending';
+  createdAt: string;
+}
+
+export interface SiteSettings {
+  branding: {
+    siteTitle: string;
+    tagline: string;
+    designation: string;
+    logoPrimary: string;
+    logoSecondary: string;
+    logoTag: string;
+  };
+  hero: {
+    title: string;
+    subtitle: string;
+    description: string;
+    primaryBtnText: string;
+    primaryBtnLink: string;
+    secondaryBtnText: string;
+    secondaryBtnLink: string;
+    bgImage: string;
+  };
+  announcementStrip: {
+    items: Array<{
+      id: string;
+      title: string;
+      subtitle: string;
+      link: string;
+    }>;
+    moreUpdatesLink: string;
+  };
+  churchLocation: {
+    churchName: string;
+    address: string;
+    schedule: string;
+    phone: string;
+    email: string;
+    directionsUrl: string;
+    mapEmbedUrl: string;
+  };
+  aboutSection: {
+    heading: string;
+    excerpt: string;
+    fullBio: string;
+    image: string;
+  };
+  socialLinks: {
+    facebook: string;
+    youtube: string;
+    instagram: string;
+    twitter: string;
+  };
+}
+
+export interface DatabaseSchema {
+  users: User[];
+  blogs: Blog[];
+  ministries: Ministry[];
+  products: Product[];
+  orders: Order[];
+  contactSubmissions: ContactSubmission[];
+  newsletterSubscribers: NewsletterSubscriber[];
+  donations: Donation[];
+  settings: SiteSettings;
+}
+
+const DB_DIR = path.resolve(process.cwd(), 'data');
+const DB_FILE = path.join(DB_DIR, 'db.json');
+
+const INITIAL_DB: DatabaseSchema = {
+  users: [
+    {
+      uid: 'usr_sorensam84',
+      name: 'Pastor Samuel Soren',
+      email: 'sorensam84@gmail.com',
+      role: 'superadmin',
+      passwordHash: 'admin123',
+      createdAt: '2026-01-01T00:00:00Z'
+    },
+    {
+      uid: 'usr_sorensam',
+      name: 'Pastor Samuel Soren',
+      email: 'sorensam@gmail.com',
+      role: 'superadmin',
+      passwordHash: 'admin123',
+      createdAt: '2026-01-01T00:00:00Z'
+    },
+    {
+      uid: 'usr_superadmin',
+      name: 'Pastor Samuel Soren',
+      email: 'admin@samuelsoren.org',
+      role: 'superadmin',
+      passwordHash: 'admin123',
+      createdAt: '2026-01-01T00:00:00Z'
+    },
+    {
+      uid: 'usr_editor',
+      name: 'Editorial Team',
+      email: 'editor@samuelsoren.org',
+      role: 'editor',
+      passwordHash: 'editor123',
+      createdAt: '2026-01-01T00:00:00Z'
+    }
+  ],
+  settings: {
+    branding: {
+      siteTitle: 'Pastor Samuel Soren',
+      tagline: 'Faith. Purpose. Transformation.',
+      designation: 'Pastor | Author | Worship Leader | Motivational Speaker',
+      logoPrimary: 'SAMUEL',
+      logoSecondary: 'SOREN',
+      logoTag: 'MINISTRIES'
+    },
+    hero: {
+      title: 'FAITH THAT INSPIRES. PURPOSE THAT TRANSFORMS.',
+      subtitle: 'PASTOR SAMUEL SOREN',
+      description: 'Sharing the Word of God, inspiring lives and equipping the next generation through faith, worship and discipleship.',
+      primaryBtnText: 'EXPLORE MINISTRY',
+      primaryBtnLink: '/ministry',
+      secondaryBtnText: 'READ LATEST BLOGS',
+      secondaryBtnLink: '/blog',
+      bgImage: 'https://images.unsplash.com/photo-1510525009512-ab7522cabb65?q=80&w=1600&auto=format&fit=crop'
+    },
+    announcementStrip: {
+      items: [
+        { id: '1', title: 'DAILY WORD', subtitle: 'Walking by Faith, Not Sight (2 Cor 5:7)', link: '/blog/faith-that-moves-mountains' },
+        { id: '2', title: 'BIBLE STUDIES', subtitle: 'Thursday Deep Dive · 7:00 PM IST', link: '/ministry/bible-teaching' },
+        { id: '3', title: 'LATEST BLOGS', subtitle: 'Empowering Youth With Holy Conviction', link: '/blog/empowering-the-next-generation' },
+        { id: '4', title: 'SUNDAY SERVICE', subtitle: 'Godda Fellowship · 10:00 AM IST', link: '/about' }
+      ],
+      moreUpdatesLink: '/blog'
+    },
+    churchLocation: {
+      churchName: 'Sacred Assemblies Fellowship Church',
+      address: 'Guru Nagar, Gangta, Godda, Jharkhand 814133, India',
+      schedule: 'Sunday @ 10:00 AM · Wednesday Prayer @ 6:00 PM',
+      phone: '+91 94311 23456',
+      email: 'contact@samuelsoren.org',
+      directionsUrl: 'https://maps.google.com/?q=Godda+Jharkhand+India',
+      mapEmbedUrl: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d116246.34771696013!2d87.14088959640952!3d24.827258384959245!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x39f04bb2c7302485%3A0x889816bf6a9e144a!2sGodda%2C%20Jharkhand!5e0!3m2!1sen!2sin!4v1700000000000!5m2!1sen!2sin'
+    },
+    aboutSection: {
+      heading: 'A LIFE DEDICATED TO HIS PURPOSE',
+      excerpt: 'Pastor Samuel Soren is an author, worship leader, motivational speaker and minister of the Gospel, serving adults, youth and children through biblical teaching, worship, discipleship and ministry leadership.',
+      fullBio: 'Pastor Samuel Soren is an author, worship leader, motivational speaker and minister of the Gospel, serving adults, youth and children through biblical teaching, worship, discipleship and ministry leadership. Based in Godda, Jharkhand, at Sacred Assemblies Fellowship Church, he is passionately committed to planting deep spiritual roots and empowering hearts across India.',
+      image: '/assets/samsusan.jpg'
+    },
+    socialLinks: {
+      facebook: 'https://facebook.com/pastorsamuelsoren',
+      youtube: 'https://youtube.com/@pastorsamuelsoren',
+      instagram: 'https://instagram.com/pastorsamuelsoren',
+      twitter: 'https://twitter.com/pastorsamuel'
+    }
+  },
+  blogs: [
+    {
+      id: 'blog_1',
+      title: 'Faith That Moves Mountains: Trusting God in Impossible Times',
+      slug: 'faith-that-moves-mountains',
+      excerpt: 'When human strength reaches its boundary, divine faith steps in to turn stumbling blocks into stepping stones of glory.',
+      content: `### The Anchor in Every Tempest
+
+In our journey with Christ, faith is not the absence of doubt, but the active decision to anchor our soul in the unwavering character of God. As Scripture declares:
+
+> "Truly I tell you, if you have faith as small as a mustard seed, you can say to this mountain, 'Move from here to there,' and it will move. Nothing will be impossible for you." — Matthew 17:20
+
+#### 1. Faith Sees Beyond Physical Obstacles
+When the disciples stood before impossible circumstances, their eyes were fixed on the storm. But Jesus asked them to look higher. Mountains represent the insurmountable problems in health, family, finances, and destiny that mock our natural capacity.
+
+#### 2. The Power of Confession
+Your words carry spiritual momentum. Speaking God's promises over your situation breaks demonic resistance and establishes kingdom reality.
+
+#### 3. Stepping Out in Obedience
+Faith is not passive contemplation; it is courageous obedience. What step of faith is the Lord urging you to take today? Trust His voice and step onto the waters.`,
+      featuredImage: 'https://images.unsplash.com/photo-1509021436665-8f07dbf5bf1d?q=80&w=1000&auto=format&fit=crop',
+      category: 'Faith and Prayer',
+      tags: ['Faith', 'Prayer', 'Spiritual Victory'],
+      author: 'Pastor Samuel Soren',
+      scriptureReference: 'Matthew 17:20',
+      status: 'published',
+      publishedAt: '2026-10-18T10:00:00Z',
+      createdAt: '2026-10-18T09:30:00Z',
+      updatedAt: '2026-10-18T10:00:00Z',
+      seoTitle: 'Faith That Moves Mountains | Pastor Samuel Soren',
+      seoDescription: 'Discover how unwavering faith in God unlocks divine breakthroughs and moves impossible mountains in your personal walk.'
+    },
+    {
+      id: 'blog_2',
+      title: 'The Heart of True Worship: Beyond Melodies and Words',
+      slug: 'the-heart-of-true-worship',
+      excerpt: 'Worship is not a musical genre or a 20-minute preliminary in church; it is the fragrant surrender of an entire life unto Christ.',
+      content: `### Worship in Spirit and Truth
+
+True worship begins when the spotlight shifts completely off ourselves and rests upon the majesty of the Lamb.
+
+> "Yet a time is coming and has now come when the true worshipers will worship the Father in the Spirit and in truth, for they are the kind of worshipers the Father seeks." — John 4:24
+
+#### The Living Sacrifice
+Apostle Paul reminds us in Romans 12:1 that offering our bodies as living sacrifices is our true and proper worship. When we obey God in the secret place, love our neighbors, and stand firm in righteousness, we produce a sweet aroma before the Throne.
+
+#### Worship in the Valley
+Praising God on the mountaintop is natural. Praising Him in midnight chains—like Paul and Silas in Philippi—shakes the foundations of prisons and releases divine liberty. Let your praise arise today!`,
+      featuredImage: 'https://images.unsplash.com/photo-1465847899084-d164df4dedc6?q=80&w=1000&auto=format&fit=crop',
+      category: 'Worship',
+      tags: ['Worship', 'Praise', 'Spiritual Intimacy'],
+      author: 'Pastor Samuel Soren',
+      scriptureReference: 'John 4:24',
+      status: 'published',
+      publishedAt: '2026-10-25T11:00:00Z',
+      createdAt: '2026-10-25T10:15:00Z',
+      updatedAt: '2026-10-25T11:00:00Z',
+      seoTitle: 'The Heart of True Worship | Pastor Samuel Soren',
+      seoDescription: 'Explore the biblical essence of worship as an everyday lifestyle of total surrender.'
+    },
+    {
+      id: 'blog_3',
+      title: 'Empowering the Next Generation: Raising Youth of Uncompromising Conviction',
+      slug: 'empowering-the-next-generation',
+      excerpt: 'In a world screaming for young people’s attention, the church must impart roots of identity and wings of divine purpose.',
+      content: `### Youth with Kingdom DNA
+
+Our youth are not just the church of tomorrow; they are active kingdom soldiers today.
+
+> "Don’t let anyone look down on you because you are young, but set an example for the believers in speech, in conduct, in love, in faith and in purity." — 1 Timothy 4:12
+
+#### Standing Like Daniel in Babylon
+Youth in this generation face unprecedented cultural pressures, social distractions, and moral relativism. Like Daniel and his companions, our young people must resolve in their hearts not to defile themselves with worldly compromises.
+
+#### Equipping Through Mentorship & Word
+Through youth rallies, intensive discipleship, and prayer fellowships at Sacred Assemblies Fellowship Church, we are seeing God kindle holy fire in the hearts of teenagers and young adults across Godda.`,
+      featuredImage: 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?q=80&w=1000&auto=format&fit=crop',
+      category: 'Youth and Family',
+      tags: ['Youth', 'Discipleship', 'Family', 'Purpose'],
+      author: 'Pastor Samuel Soren',
+      scriptureReference: '1 Timothy 4:12',
+      status: 'published',
+      publishedAt: '2026-11-02T14:30:00Z',
+      createdAt: '2026-11-02T12:00:00Z',
+      updatedAt: '2026-11-02T14:30:00Z',
+      seoTitle: 'Empowering the Next Generation | Pastor Samuel Soren',
+      seoDescription: 'Biblical insights on raising young believers of unwavering faith and bold moral integrity.'
+    },
+    {
+      id: 'blog_4',
+      title: 'Walking in Divine Purpose: Discovering Your Calling in the Wilderness',
+      slug: 'walking-in-divine-purpose',
+      excerpt: 'God never wastes a season of preparation. What seems like delay is often God’s sacred classroom of maturity.',
+      content: `### God's Master Blueprint for Your Life
+
+Every human being was engineered with an eternal purpose. You were not created by accident.
+
+> "For I know the plans I have for you,” declares the Lord, “plans to prosper you and not to harm you, plans to give you hope and a future." — Jeremiah 29:11
+
+#### The Crucible of Waiting
+Joseph spent years in Potiphar's house and Pharaoh's prison before ascending to the palace. David tended sheep on forgotten hills before wearing the royal crown. God tests your character in private before granting you public influence.`,
+      featuredImage: 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?q=80&w=1000&auto=format&fit=crop',
+      category: 'Daily Word',
+      tags: ['Purpose', 'Calling', 'Destiny'],
+      author: 'Pastor Samuel Soren',
+      scriptureReference: 'Jeremiah 29:11',
+      status: 'published',
+      publishedAt: '2026-11-08T09:00:00Z',
+      createdAt: '2026-11-08T08:00:00Z',
+      updatedAt: '2026-11-08T09:00:00Z',
+      seoTitle: 'Walking in Divine Purpose | Pastor Samuel Soren',
+      seoDescription: 'Learn how God shapes your destiny even during seasons of solitude and waiting.'
+    },
+    {
+      id: 'blog_5',
+      title: 'Upcoming Godda Spiritual Awakening & 3-Day Fasting Guide',
+      slug: 'godda-spiritual-awakening-fasting-guide',
+      excerpt: 'Internal draft guide for leaders and prayer team preparing for the district-wide revival weekend.',
+      content: `Draft guidelines for ministry leaders: Schedule of intercession, fasting checkpoints, and praise vigils.`,
+      featuredImage: 'https://images.unsplash.com/photo-1543807535-eceef0bc6599?q=80&w=1000&auto=format&fit=crop',
+      category: 'Ministry News',
+      tags: ['Revival', 'Fasting', 'Prayer'],
+      author: 'Pastor Samuel Soren',
+      status: 'draft',
+      publishedAt: '',
+      createdAt: '2026-11-10T11:00:00Z',
+      updatedAt: '2026-11-10T11:00:00Z'
+    }
+  ],
+  ministries: [
+    {
+      id: 'min_1',
+      title: 'Church Ministry',
+      slug: 'church-ministry',
+      tagline: 'Gathering in Sacred Fellowship',
+      description: 'Sacred Assemblies Fellowship Church in Godda is a vibrant sanctuary of spiritual worship, uncompromised biblical preaching, and warm pastoral care.',
+      content: 'Under Pastor Samuel Soren’s pastoral oversight, our local congregation gathers weekly for corporate worship, communion, intercessory prayer, and discipleship. We welcome seekers, families, and all yearning for a deeper encounter with God.',
+      scripture: 'Hebrews 10:24-25',
+      image: 'https://images.unsplash.com/photo-1548625361-195972855141?q=80&w=1000&auto=format&fit=crop',
+      leader: 'Pastor Samuel Soren',
+      schedule: 'Sunday @ 10:00 AM & Wednesday @ 6:00 PM',
+      status: 'published',
+      createdAt: '2026-01-01T00:00:00Z',
+      updatedAt: '2026-01-01T00:00:00Z'
+    },
+    {
+      id: 'min_2',
+      title: 'Worship Ministry',
+      slug: 'worship-ministry',
+      tagline: 'Anointed Praise & Adoration',
+      description: 'Cultivating worship that ushers congregations into God’s tangible presence through heartfelt psalms, hymns, and spiritual songs.',
+      content: 'As an experienced worship leader and songwriter, Pastor Samuel mentors vocalists, instrumentalists, and sound stewards to minister not for performance, but with pure hearts before the Throne.',
+      scripture: 'Psalm 100:1-5',
+      image: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=1000&auto=format&fit=crop',
+      leader: 'Samuel Soren & Worship Team',
+      schedule: 'Saturday Rehearsal & Devotion @ 5:00 PM',
+      status: 'published',
+      createdAt: '2026-01-01T00:00:00Z',
+      updatedAt: '2026-01-01T00:00:00Z'
+    },
+    {
+      id: 'min_3',
+      title: 'Evangelism & Rural Missions',
+      slug: 'evangelism-missions',
+      tagline: 'Reaching the Unreached in Jharkhand',
+      description: 'Taking the transformative message of Christ to tribal villages, rural communities, and urban centers across Jharkhand and eastern India.',
+      content: 'Our mission teams carry food relief, medical camps, open-air Gospel crusades, and church planting initiatives to regions where Christ’s hope is sorely needed.',
+      scripture: 'Mark 16:15',
+      image: 'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?q=80&w=1000&auto=format&fit=crop',
+      leader: 'Missions Outreach Core',
+      schedule: 'Monthly Village Outreaches',
+      status: 'published',
+      createdAt: '2026-01-01T00:00:00Z',
+      updatedAt: '2026-01-01T00:00:00Z'
+    },
+    {
+      id: 'min_4',
+      title: 'Youth Ministry',
+      slug: 'youth-ministry',
+      tagline: 'Igniting Generation Next for Christ',
+      description: 'Equipping teenagers, college students, and young professionals to discover their divine identity, conquer cultural compromise, and lead with boldness.',
+      content: 'Ignite Youth Fellowship meets weekly for authentic peer discussions, power-packed worship, interactive Bible study, and leadership bootcamps.',
+      scripture: '1 Timothy 4:12',
+      image: 'https://images.unsplash.com/photo-1517486808906-6ca8b3f04846?q=80&w=1000&auto=format&fit=crop',
+      leader: 'Youth Leadership Guild',
+      schedule: 'Friday Youth Gathering @ 6:30 PM',
+      status: 'published',
+      createdAt: '2026-01-01T00:00:00Z',
+      updatedAt: '2026-01-01T00:00:00Z'
+    },
+    {
+      id: 'min_5',
+      title: 'Children’s Ministry',
+      slug: 'children-ministry',
+      tagline: 'Kingdom Kids Nurtured in Grace',
+      description: 'Laying deep foundational truths through creative storytelling, Bible memory verses, music, and joyful activities in Sunday School.',
+      content: 'Every Sunday morning, dedicated teachers welcome children ages 3-12 into an engaging, loving environment where biblical characters and moral integrity come alive.',
+      scripture: 'Proverbs 22:6',
+      image: 'https://images.unsplash.com/photo-1502086223501-7ea6ecd79368?q=80&w=1000&auto=format&fit=crop',
+      leader: 'Sister Grace & Sunday School Staff',
+      schedule: 'Sunday @ 10:15 AM',
+      status: 'published',
+      createdAt: '2026-01-01T00:00:00Z',
+      updatedAt: '2026-01-01T00:00:00Z'
+    },
+    {
+      id: 'min_6',
+      title: 'Discipleship & Life Groups',
+      slug: 'discipleship-lifegroups',
+      tagline: 'Rooted and Built Up in Christ',
+      description: 'Intimate mid-week home fellowship circles where believers share testimony, pray for one another, and build authentic Christ-centered friendships.',
+      content: 'Spiritual growth flourishes in small groups. Our life groups gather across various neighborhoods in Godda to digest Sunday messages and support each other through life’s seasons.',
+      scripture: 'Acts 2:42',
+      image: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=1000&auto=format&fit=crop',
+      leader: 'Pastoral Elders Team',
+      schedule: 'Tuesday Evening Life Groups',
+      status: 'published',
+      createdAt: '2026-01-01T00:00:00Z',
+      updatedAt: '2026-01-01T00:00:00Z'
+    },
+    {
+      id: 'min_7',
+      title: 'Leadership Development',
+      slug: 'leadership-development',
+      tagline: 'Mentoring Tomorrow’s Shepherds',
+      description: 'Intensive pastoral training and spiritual coaching for aspiring evangelists, church workers, and ministry coordinators.',
+      content: 'Through seminars, practical ministry assignments, and personal mentorship by Pastor Samuel, leaders are shaped in sound doctrine, integrity, and servant leadership.',
+      scripture: '2 Timothy 2:2',
+      image: 'https://images.unsplash.com/photo-1531482615713-2afd69097998?q=80&w=1000&auto=format&fit=crop',
+      leader: 'Pastor Samuel Soren',
+      schedule: 'Bi-monthly Leadership Seminars',
+      status: 'published',
+      createdAt: '2026-01-01T00:00:00Z',
+      updatedAt: '2026-01-01T00:00:00Z'
+    },
+    {
+      id: 'min_8',
+      title: 'Bible Teaching & Theology',
+      slug: 'bible-teaching',
+      tagline: 'Uncompromising Truth for Everyday Living',
+      description: 'Expository line-by-line scripture teachings that equip believers to discern truth, defend their faith, and walk in kingdom wisdom.',
+      content: 'Solid doctrine produces steadfast Christians. Pastor Samuel leads systematic teachings through books of the Bible, covenants, and prophetic themes.',
+      scripture: 'Colossians 3:16',
+      image: 'https://images.unsplash.com/photo-1504052434569-70ad5836ab65?q=80&w=1000&auto=format&fit=crop',
+      leader: 'Pastor Samuel Soren',
+      schedule: 'Thursday Bible Study @ 7:00 PM',
+      status: 'published',
+      createdAt: '2026-01-01T00:00:00Z',
+      updatedAt: '2026-01-01T00:00:00Z'
+    }
+  ],
+  products: [
+    {
+      id: 'prod_1',
+      title: 'Walking in Divine Purpose: Discovering Your Calling in Christ',
+      slug: 'walking-in-divine-purpose-book',
+      description: 'Pastor Samuel Soren’s flagship book examining how God orchestrates seasons of waiting, testing, and elevation to unlock your destiny.',
+      price: 399,
+      discountPrice: 299,
+      image: 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?q=80&w=800&auto=format&fit=crop',
+      category: 'Books',
+      stock: 45,
+      productType: 'physical',
+      status: 'active'
+    },
+    {
+      id: 'prod_2',
+      title: 'Sacred Worship: A Biblical Guide to Spiritual Intimacy',
+      slug: 'sacred-worship-book',
+      description: 'A transformative manual on true biblical worship, vocal stewardship, and breaking spiritual strongholds through praise.',
+      price: 349,
+      discountPrice: 279,
+      image: 'https://images.unsplash.com/photo-1497633762265-9d179a990aa6?q=80&w=800&auto=format&fit=crop',
+      category: 'Books',
+      stock: 60,
+      productType: 'physical',
+      status: 'active'
+    },
+    {
+      id: 'prod_3',
+      title: 'Youth on Fire: 40-Day Devotional & Challenge Guide',
+      slug: 'youth-on-fire-devotional',
+      description: 'Daily scriptural reflections, prayers, and boldness challenges curated especially for youth and young adults navigating modern temptations.',
+      price: 249,
+      discountPrice: 199,
+      image: 'https://images.unsplash.com/photo-1512820790803-83ca734da794?q=80&w=800&auto=format&fit=crop',
+      category: 'Devotionals',
+      stock: 80,
+      productType: 'physical',
+      status: 'active'
+    },
+    {
+      id: 'prod_4',
+      title: 'Anointed Worship: Live in Godda (Digital Audio Album)',
+      slug: 'anointed-worship-live-audio',
+      description: '10 anointed Hindi & Santali worship tracks recorded live with the Sacred Assemblies praise team. Instant high-resolution MP3 download.',
+      price: 199,
+      discountPrice: 149,
+      image: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?q=80&w=800&auto=format&fit=crop',
+      category: 'Music',
+      stock: 9999,
+      productType: 'digital',
+      downloadUrl: 'https://example.com/downloads/anointed-worship-live.zip',
+      status: 'active'
+    },
+    {
+      id: 'prod_5',
+      title: 'Daily Devotional Journal 2026: 365 Days of Word and Prayer',
+      slug: 'daily-devotional-journal-2026',
+      description: 'Premium faux-leather bound prayer journal with daily scriptures, reflection prompts, and prayer request tracking pages.',
+      price: 499,
+      discountPrice: 399,
+      image: 'https://images.unsplash.com/photo-1506784983877-45594efa4cbe?q=80&w=800&auto=format&fit=crop',
+      category: 'Devotionals',
+      stock: 35,
+      productType: 'physical',
+      status: 'active'
+    },
+    {
+      id: 'prod_6',
+      title: 'Kingdom Leadership Blueprint (Digital PDF Masterclass Guide)',
+      slug: 'kingdom-leadership-blueprint-pdf',
+      description: 'A 60-page comprehensive study guide on church governance, team discipleship, and spiritual authority for ministry pioneers.',
+      price: 149,
+      discountPrice: 99,
+      image: 'https://images.unsplash.com/photo-1455390582262-044cdead277a?q=80&w=800&auto=format&fit=crop',
+      category: 'Digital Resources',
+      stock: 9999,
+      productType: 'digital',
+      downloadUrl: 'https://example.com/downloads/leadership-blueprint-guide.pdf',
+      status: 'active'
+    }
+  ],
+  orders: [
+    {
+      id: 'ORD-88210',
+      customerName: 'Priya Sharma',
+      email: 'priya.sharma@example.com',
+      phone: '+91 98234 56789',
+      address: 'Near Gandhi Chowk, Ranchi, Jharkhand',
+      items: [
+        {
+          productId: 'prod_1',
+          title: 'Walking in Divine Purpose: Discovering Your Calling in Christ',
+          price: 299,
+          quantity: 1,
+          subtotal: 299,
+          productType: 'physical'
+        }
+      ],
+      subtotal: 299,
+      shipping: 50,
+      total: 349,
+      paymentMethod: 'upi',
+      paymentStatus: 'verified',
+      paymentReference: 'UPI_REF_9812401',
+      orderStatus: 'shipped',
+      createdAt: '2026-11-09T14:20:00Z'
+    }
+  ],
+  contactSubmissions: [
+    {
+      id: 'SUB-1001',
+      fullName: 'Sister Anjali Marandi',
+      email: 'anjali.m@example.com',
+      phone: '+91 94312 88712',
+      category: 'Prayer Request',
+      subject: 'Prayer for family health and spiritual strength',
+      message: 'Respected Pastor Samuel Soren, please uphold my elderly mother in your intercessory prayers for healing and our home in peace.',
+      status: 'read',
+      createdAt: '2026-11-08T09:15:00Z'
+    },
+    {
+      id: 'SUB-1002',
+      fullName: 'Brother Rajesh Tudu',
+      email: 'rajesh.tudu@example.com',
+      phone: '+91 97711 00234',
+      category: 'Speaking Invitation',
+      subject: 'Invitation as Keynote Speaker for Santal Pargana Youth Convention',
+      message: 'Greetings in Jesus Name. On behalf of the district youth council, we warmly invite you to minister God’s Word on Dec 14-15 in Dumka.',
+      status: 'new',
+      createdAt: '2026-11-10T16:45:00Z'
+    }
+  ],
+  newsletterSubscribers: [
+    {
+      id: 'sub_1',
+      email: 'believer.godda@example.com',
+      subscribedAt: '2026-10-20T11:00:00Z',
+      status: 'active'
+    },
+    {
+      id: 'sub_2',
+      email: 'grace.fellowship@example.com',
+      subscribedAt: '2026-11-01T08:30:00Z',
+      status: 'active'
+    }
+  ],
+  donations: [
+    {
+      id: 'DON-2026-8801',
+      donorName: 'Brother Emmanuel Marandi',
+      email: 'emmanuel.m@example.com',
+      phone: '+91 94311 55678',
+      cause: 'Rural Jharkhand Tribal Missions & Gospel Crusades',
+      amount: 2500,
+      frequency: 'one-time',
+      paymentMethod: 'upi',
+      transactionId: 'UPI984210048123',
+      upiId: 'samuelsoren2@ybl',
+      prayerRequest: 'Prayers for village outreach in Sunderpahari and tribal youth fellowship.',
+      isAnonymous: false,
+      status: 'verified',
+      createdAt: '2026-11-08T15:30:00Z'
+    },
+    {
+      id: 'DON-2026-8802',
+      donorName: 'Anonymous Donor',
+      email: 'believer.fellowship@example.com',
+      cause: 'Sacred Assemblies Fellowship Church Building & Worship Sound',
+      amount: 5000,
+      frequency: 'monthly',
+      paymentMethod: 'razorpay_qr',
+      transactionId: 'pay_QR998241042',
+      upiId: 'samuelsoren2@ybl',
+      isAnonymous: true,
+      status: 'verified',
+      createdAt: '2026-11-10T11:20:00Z'
+    }
+  ]
+};
+
+class DatabaseManager {
+  private data: DatabaseSchema;
+
+  constructor() {
+    this.data = this.loadData();
+  }
+
+  private loadData(): DatabaseSchema {
+    try {
+      if (!fs.existsSync(DB_DIR)) {
+        fs.mkdirSync(DB_DIR, { recursive: true });
+      }
+
+      if (fs.existsSync(DB_FILE)) {
+        const raw = fs.readFileSync(DB_FILE, 'utf-8');
+        const parsed: DatabaseSchema = JSON.parse(raw);
+        let dbModified = false;
+
+        // Ensure donations array exists
+        if (!parsed.donations) {
+          parsed.donations = INITIAL_DB.donations;
+          dbModified = true;
+        }
+
+        // Ensure sorensam84@gmail.com exists as superadmin
+        if (!parsed.users.some((u) => u.email.toLowerCase() === 'sorensam84@gmail.com')) {
+          parsed.users.unshift({
+            uid: 'usr_sorensam84',
+            name: 'Pastor Samuel Soren',
+            email: 'sorensam84@gmail.com',
+            role: 'superadmin',
+            passwordHash: 'admin123',
+            createdAt: '2026-01-01T00:00:00Z'
+          });
+          dbModified = true;
+        }
+
+        // Ensure sorensam@gmail.com exists as superadmin
+        if (!parsed.users.some((u) => u.email.toLowerCase() === 'sorensam@gmail.com')) {
+          parsed.users.unshift({
+            uid: 'usr_sorensam',
+            name: 'Pastor Samuel Soren',
+            email: 'sorensam@gmail.com',
+            role: 'superadmin',
+            passwordHash: 'admin123',
+            createdAt: '2026-01-01T00:00:00Z'
+          });
+          dbModified = true;
+        }
+
+        if (dbModified) {
+          fs.writeFileSync(DB_FILE, JSON.stringify(parsed, null, 2), 'utf-8');
+        }
+        return parsed;
+      }
+    } catch (err) {
+      console.error('Error loading database file, initializing with defaults:', err);
+    }
+
+    // Persist defaults
+    this.saveData(INITIAL_DB);
+    return INITIAL_DB;
+  }
+
+  private saveData(data: DatabaseSchema): void {
+    try {
+      if (!fs.existsSync(DB_DIR)) {
+        fs.mkdirSync(DB_DIR, { recursive: true });
+      }
+      fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2), 'utf-8');
+    } catch (err) {
+      console.error('Failed to write database file:', err);
+    }
+  }
+
+  public getData(): DatabaseSchema {
+    return this.data;
+  }
+
+  public mutate(fn: (data: DatabaseSchema) => void): DatabaseSchema {
+    fn(this.data);
+    this.saveData(this.data);
+    return this.data;
+  }
+}
+
+export const db = new DatabaseManager();

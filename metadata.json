@@ -1,0 +1,6 @@
+{
+  "name": "Pastor Samuel Soren - Official Ministry Website",
+  "description": "Official ministry website for Pastor Samuel Soren: author, worship leader, motivational speaker, and minister of the Gospel at Sacred Assemblies Fellowship Church, Godda, Jharkhand.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

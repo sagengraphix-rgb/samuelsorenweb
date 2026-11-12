@@ -1,0 +1,91 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function getUserRole() {
+      return request.auth.token.role;
+    }
+    
+    function isSuperAdmin() {
+      return isAuthenticated() && (
+        getUserRole() == 'superadmin' || 
+        request.auth.token.email == 'sorensam84@gmail.com' ||
+        request.auth.token.email == 'sorensam@gmail.com' ||
+        request.auth.token.email == 'admin@samuelsoren.org' ||
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'superadmin'
+      );
+    }
+    
+    function isEditor() {
+      return isAuthenticated() && (
+        getUserRole() == 'editor' || 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'editor'
+      );
+    }
+    
+    function isStaff() {
+      return isSuperAdmin() || isEditor();
+    }
+
+    // Public collections (read-only for public, writable by staff)
+    match /blogs/{blogId} {
+      // Public can only read published blogs
+      allow read: if resource.data.status == 'published' || isStaff();
+      // Only staff can create/update/delete blogs
+      allow write: if isStaff();
+    }
+
+    match /ministries/{ministryId} {
+      allow read: if resource.data.status == 'published' || isStaff();
+      allow write: if isStaff();
+    }
+
+    match /products/{productId} {
+      allow read: if resource.data.status == 'active' || isStaff();
+      allow write: if isStaff();
+    }
+
+    match /settings/{settingId} {
+      allow read: if true;
+      allow write: if isSuperAdmin();
+    }
+
+    // CRITICAL: Contact Submissions & Prayer Requests - PRIVATE ADMIN ONLY
+    match /contactSubmissions/{submissionId} {
+      // Public visitors can only create (submit form)
+      allow create: if request.resource.data.keys().hasAll(['fullName', 'email', 'message', 'category'])
+                    && request.resource.data.fullName is string
+                    && request.resource.data.email is string
+                    && request.resource.data.message.size() >= 10;
+      // Public visitors CANNOT read any submissions
+      // Editors CANNOT read private contact submissions
+      // ONLY Super Admin can read, update, or delete
+      allow read, update, delete: if isSuperAdmin();
+    }
+
+    // Newsletter Subscribers
+    match /newsletterSubscribers/{subscriberId} {
+      allow create: if request.resource.data.keys().hasAll(['email'])
+                    && request.resource.data.email is string;
+      allow read, delete: if isSuperAdmin();
+      allow update: if false;
+    }
+
+    // Orders & Payment Records
+    match /orders/{orderId} {
+      allow create: if true; // Created during checkout
+      allow read: if isSuperAdmin() || (isAuthenticated() && resource.data.userId == request.auth.uid);
+      allow update, delete: if isSuperAdmin();
+    }
+
+    // User Accounts & Roles
+    match /users/{userId} {
+      allow read: if isAuthenticated() && (request.auth.uid == userId || isSuperAdmin());
+      allow write: if isSuperAdmin();
+    }
+  }
+}
