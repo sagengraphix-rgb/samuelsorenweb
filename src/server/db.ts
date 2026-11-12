@@ -701,7 +701,7 @@ Joseph spent years in Potiphar's house and Pharaoh's prison before ascending to 
       id: 'DON-2026-8802',
       donorName: 'Anonymous Donor',
       email: 'believer.fellowship@example.com',
-      cause: 'Sacred Assemblies Fellowship Church Building & Worship Sound',
+      cause: 'Church Building and Sound',
       amount: 5000,
       frequency: 'monthly',
       paymentMethod: 'razorpay_qr',

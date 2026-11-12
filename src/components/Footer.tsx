@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { MapPin, Phone, Mail, Clock, Heart, Youtube, Facebook, Instagram, Twitter, ExternalLink, X, Lock } from 'lucide-react';
+import { MapPin, Phone, Mail, Clock, Heart, Youtube, Facebook, Instagram, Twitter, ExternalLink, X, Lock, Flame } from 'lucide-react';
 
 interface FooterProps {
   onNavigate: (page: string) => void;
@@ -80,6 +80,15 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onOpenDonate }) => {
               <li>
                 <button onClick={() => onNavigate('contact')} className="hover:text-white hover:translate-x-1 transition-all text-neutral-300">
                   Contact & Prayer Requests
+                </button>
+              </li>
+              <li>
+                <button
+                  onClick={() => onNavigate('faith-faq')}
+                  className="hover:text-white hover:translate-x-1 transition-all text-neutral-300 flex items-center gap-1.5"
+                >
+                  <Flame className="w-3.5 h-3.5 text-[#C83338]" />
+                  <span>FAQ: Pentecostal Faith</span>
                 </button>
               </li>
               {onOpenDonate && (
@@ -189,6 +198,13 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onOpenDonate }) => {
               className="hover:text-neutral-200 transition-colors underline-offset-4 hover:underline"
             >
               Prayer Request
+            </button>
+            <button
+              onClick={() => onNavigate('faith-faq')}
+              className="hover:text-neutral-200 transition-colors underline-offset-4 hover:underline flex items-center gap-1 font-semibold text-neutral-300"
+            >
+              <Flame className="w-3 h-3 text-[#C83338]" />
+              <span>Faith FAQ</span>
             </button>
             {onOpenDonate && (
               <button

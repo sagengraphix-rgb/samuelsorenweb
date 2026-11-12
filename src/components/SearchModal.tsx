@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, X, BookOpen, HeartHandshake, ShoppingBag, ArrowRight } from 'lucide-react';
+import { Search, X, BookOpen, HeartHandshake, ShoppingBag, ArrowRight, Flame } from 'lucide-react';
 import { Blog, Ministry, Product } from '../types';
 
 interface SearchModalProps {
@@ -114,8 +114,48 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose, onNav
           )}
 
           {!loading && !query.trim() && (
-            <div className="py-6 text-center text-xs text-neutral-400">
-              Popular searches: <span className="text-[#C83338] cursor-pointer" onClick={() => setQuery('Faith')}>Faith</span> &middot; <span className="text-[#C83338] cursor-pointer" onClick={() => setQuery('Worship')}>Worship</span> &middot; <span className="text-[#C83338] cursor-pointer" onClick={() => setQuery('Youth')}>Youth</span> &middot; <span className="text-[#C83338] cursor-pointer" onClick={() => setQuery('Purpose')}>Purpose</span> &middot; <span className="text-[#C83338] cursor-pointer" onClick={() => setQuery('Godda')}>Godda Church</span>
+            <div className="py-6 text-center text-xs text-neutral-400 space-y-2">
+              <div>
+                Popular searches: <span className="text-[#C83338] cursor-pointer hover:underline" onClick={() => setQuery('Faith')}>Faith</span> &middot; <span className="text-[#C83338] cursor-pointer hover:underline" onClick={() => setQuery('Holy Spirit')}>Holy Spirit</span> &middot; <span className="text-[#C83338] cursor-pointer hover:underline" onClick={() => setQuery('Worship')}>Worship</span> &middot; <span className="text-[#C83338] cursor-pointer hover:underline" onClick={() => setQuery('Youth')}>Youth</span> &middot; <span className="text-[#C83338] cursor-pointer hover:underline" onClick={() => setQuery('Godda')}>Godda Church</span>
+              </div>
+              <div className="pt-2">
+                <button
+                  onClick={() => {
+                    onClose();
+                    onNavigate('faith-faq');
+                  }}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-red-50 text-[#C83338] font-bold text-xs hover:bg-red-100 transition"
+                >
+                  <Flame className="w-3.5 h-3.5 fill-[#C83338]" />
+                  <span>Browse Pentecostal Faith FAQ & Doctrinal Answers</span>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Doctrinal FAQ Quick Match */}
+          {query.trim() && /faith|pentecost|tongue|spirit|baptis|heal|doctrin|belie|faq/i.test(query) && (
+            <div className="p-3 bg-red-50/70 border border-red-200 rounded-lg flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Flame className="w-4 h-4 text-[#C83338] shrink-0" />
+                <div>
+                  <p className="text-xs font-bold text-neutral-900">
+                    Pentecostal Faith FAQ &amp; Scriptural Answers
+                  </p>
+                  <p className="text-[11px] text-neutral-600">
+                    Detailed answers on Holy Spirit baptism, speaking in tongues, divine healing, and sanctification.
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  onClose();
+                  onNavigate('faith-faq');
+                }}
+                className="px-2.5 py-1 bg-[#C83338] text-white text-xs font-bold rounded-sm hover:bg-[#a62529] transition shrink-0 ml-2"
+              >
+                View FAQ &rarr;
+              </button>
             </div>
           )}
 

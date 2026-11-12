@@ -44,8 +44,8 @@ const CAUSES: CauseOption[] = [
   },
   {
     id: 'church-building',
-    title: 'Sacred Assemblies Church Building & Sound',
-    description: 'Godda church hall expansion, acoustic treatments, worship instruments & seating.',
+    title: 'Church Building and Sound',
+    description: 'Land and church building, acoustic treatments, worship instruments & Seating',
     icon: Church
   },
   {

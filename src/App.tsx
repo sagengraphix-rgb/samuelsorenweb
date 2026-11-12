@@ -16,9 +16,10 @@ import { ShopPage } from './pages/ShopPage';
 import { AboutPage } from './pages/AboutPage';
 import { ContactPage } from './pages/ContactPage';
 import { AdminDashboard } from './pages/AdminDashboard';
+import { FaithFaqPage } from './pages/FaithFaqPage';
 
 export default function App() {
-  const [currentPage, setCurrentPage] = useState<'home' | 'ministry' | 'blog' | 'shop' | 'about' | 'contact' | 'admin'>('home');
+  const [currentPage, setCurrentPage] = useState<'home' | 'ministry' | 'blog' | 'shop' | 'about' | 'contact' | 'admin' | 'faith-faq'>('home');
   const [pageParam, setPageParam] = useState<string | undefined>(undefined);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isDonateOpen, setIsDonateOpen] = useState(false);
@@ -44,6 +45,8 @@ export default function App() {
       setCurrentPage('about');
     } else if (path === 'contact') {
       setCurrentPage('contact');
+    } else if (path === 'faith-faq' || path === 'faq') {
+      setCurrentPage('faith-faq');
     }
   }, []);
 
@@ -97,6 +100,12 @@ export default function App() {
             {currentPage === 'shop' && <ShopPage initialSlug={pageParam} onNavigate={handleNavigate} />}
             {currentPage === 'about' && <AboutPage onNavigate={handleNavigate} />}
             {currentPage === 'contact' && <ContactPage />}
+            {currentPage === 'faith-faq' && (
+              <FaithFaqPage
+                onNavigate={handleNavigate}
+                onOpenDonate={(cause?: string) => handleOpenDonate(cause)}
+              />
+            )}
             {currentPage === 'admin' && (
               <div>
                 {/* Admin Header with quick return to public website */}

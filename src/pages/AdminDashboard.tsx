@@ -2023,7 +2023,7 @@ export const AdminDashboard: React.FC = () => {
                     >
                       <option value="All">All Ministry Causes</option>
                       <option value="Rural Jharkhand Tribal Missions & Gospel Crusades">Tribal Missions</option>
-                      <option value="Sacred Assemblies Fellowship Church Building & Worship Sound">Church Building</option>
+                      <option value="Church Building and Sound">Church Building and Sound</option>
                       <option value="Kingdom Kids Sunday School & Youth Discipleship">Sunday School & Youth</option>
                       <option value="Literature & Biblical Teaching Free Distribution">Free Literature</option>
                       <option value="General Ministry Tithes, Offerings & Pastor Support">General Tithes</option>
