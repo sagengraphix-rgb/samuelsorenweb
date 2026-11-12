@@ -1,0 +1,196 @@
+{
+  "entities": {
+    "Blog": {
+      "title": "Blog",
+      "description": "Ministry sermons, reflections, and pastoral articles",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "title": { "type": "string", "maxLength": 300 },
+        "slug": { "type": "string", "maxLength": 150 },
+        "excerpt": { "type": "string", "maxLength": 1000 },
+        "content": { "type": "string", "maxLength": 50000 },
+        "featuredImage": { "type": "string", "maxLength": 2048 },
+        "category": { "type": "string", "maxLength": 100 },
+        "author": { "type": "string", "maxLength": 100 },
+        "status": { "type": "string", "enum": ["published", "draft", "scheduled"] },
+        "publishedAt": { "type": "string", "maxLength": 64 },
+        "createdAt": { "type": "string", "maxLength": 64 },
+        "updatedAt": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["title", "slug", "content", "status", "author"]
+    },
+    "Ministry": {
+      "title": "Ministry",
+      "description": "Church outreaches, fellowships, and ministry initiatives",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "title": { "type": "string", "maxLength": 200 },
+        "slug": { "type": "string", "maxLength": 150 },
+        "tagline": { "type": "string", "maxLength": 300 },
+        "description": { "type": "string", "maxLength": 2000 },
+        "content": { "type": "string", "maxLength": 50000 },
+        "scripture": { "type": "string", "maxLength": 500 },
+        "image": { "type": "string", "maxLength": 2048 },
+        "status": { "type": "string", "enum": ["published", "draft"] },
+        "createdAt": { "type": "string", "maxLength": 64 },
+        "updatedAt": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["title", "slug", "description", "status"]
+    },
+    "Product": {
+      "title": "Product",
+      "description": "Books, study guides, and ministry resources",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "title": { "type": "string", "maxLength": 200 },
+        "slug": { "type": "string", "maxLength": 150 },
+        "description": { "type": "string", "maxLength": 5000 },
+        "price": { "type": "number" },
+        "discountPrice": { "type": "number" },
+        "image": { "type": "string", "maxLength": 2048 },
+        "category": { "type": "string", "maxLength": 100 },
+        "stock": { "type": "number" },
+        "productType": { "type": "string", "enum": ["physical", "digital"] },
+        "status": { "type": "string", "enum": ["active", "archived"] }
+      },
+      "required": ["title", "slug", "price", "productType", "status"]
+    },
+    "Order": {
+      "title": "Order",
+      "description": "Customer purchase orders for books and resources",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "customerName": { "type": "string", "maxLength": 200 },
+        "email": { "type": "string", "maxLength": 200 },
+        "phone": { "type": "string", "maxLength": 50 },
+        "total": { "type": "number" },
+        "paymentMethod": { "type": "string", "maxLength": 50 },
+        "paymentStatus": { "type": "string", "enum": ["pending", "verified", "failed"] },
+        "orderStatus": { "type": "string", "enum": ["new", "processing", "shipped", "completed", "cancelled"] },
+        "createdAt": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["customerName", "email", "total", "paymentMethod", "orderStatus"]
+    },
+    "ContactSubmission": {
+      "title": "ContactSubmission",
+      "description": "Private contact messages and prayer requests submitted by visitors",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "fullName": { "type": "string", "maxLength": 200 },
+        "email": { "type": "string", "maxLength": 200 },
+        "phone": { "type": "string", "maxLength": 50 },
+        "category": { "type": "string", "enum": ["General Inquiry", "Prayer Request", "Speaking Invitation", "Ministry Inquiry", "Other"] },
+        "subject": { "type": "string", "maxLength": 300 },
+        "message": { "type": "string", "maxLength": 5000 },
+        "status": { "type": "string", "enum": ["new", "read", "replied", "archived"] },
+        "createdAt": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["fullName", "email", "category", "subject", "message"]
+    },
+    "Donation": {
+      "title": "Donation",
+      "description": "Donations, tithes, and offerings for church building and ministry",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "donorName": { "type": "string", "maxLength": 200 },
+        "email": { "type": "string", "maxLength": 200 },
+        "phone": { "type": "string", "maxLength": 50 },
+        "cause": { "type": "string", "maxLength": 200 },
+        "amount": { "type": "number" },
+        "frequency": { "type": "string", "enum": ["one-time", "monthly"] },
+        "paymentMethod": { "type": "string", "enum": ["upi", "razorpay_qr"] },
+        "transactionId": { "type": "string", "maxLength": 128 },
+        "upiId": { "type": "string", "maxLength": 128 },
+        "prayerRequest": { "type": "string", "maxLength": 2000 },
+        "isAnonymous": { "type": "boolean" },
+        "status": { "type": "string", "enum": ["verified", "pending"] },
+        "createdAt": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["donorName", "email", "cause", "amount", "paymentMethod"]
+    },
+    "NewsletterSubscriber": {
+      "title": "NewsletterSubscriber",
+      "description": "Email newsletter subscribers",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "email": { "type": "string", "maxLength": 200 },
+        "status": { "type": "string", "enum": ["active", "unsubscribed"] },
+        "subscribedAt": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["email"]
+    },
+    "SiteSettings": {
+      "title": "SiteSettings",
+      "description": "General website settings, church location, and social links",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 64 },
+        "branding": { "type": "object" },
+        "hero": { "type": "object" },
+        "churchLocation": { "type": "object" },
+        "aboutSection": { "type": "object" },
+        "socialLinks": { "type": "object" }
+      },
+      "required": ["branding"]
+    },
+    "User": {
+      "title": "User",
+      "description": "Public user profile and account details",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "maxLength": 128 },
+        "name": { "type": "string", "maxLength": 200 },
+        "email": { "type": "string", "maxLength": 200 },
+        "role": { "type": "string", "enum": ["superadmin", "editor", "public"] },
+        "createdAt": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["uid", "email", "role"]
+    }
+  },
+  "firestore": {
+    "/blogs/{blogId}": {
+      "schema": "Blog",
+      "description": "Collection of sermon and teaching blog posts"
+    },
+    "/ministries/{ministryId}": {
+      "schema": "Ministry",
+      "description": "Collection of ministry departments and outreaches"
+    },
+    "/products/{productId}": {
+      "schema": "Product",
+      "description": "Collection of store merchandise and books"
+    },
+    "/orders/{orderId}": {
+      "schema": "Order",
+      "description": "Collection of store orders"
+    },
+    "/contactSubmissions/{submissionId}": {
+      "schema": "ContactSubmission",
+      "description": "Private contact messages and prayer requests"
+    },
+    "/donations/{donationId}": {
+      "schema": "Donation",
+      "description": "Donations, tithes, and offerings"
+    },
+    "/newsletterSubscribers/{subscriberId}": {
+      "schema": "NewsletterSubscriber",
+      "description": "Newsletter subscriber email list"
+    },
+    "/settings/{settingId}": {
+      "schema": "SiteSettings",
+      "description": "Website global configuration document"
+    },
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User accounts and membership roles"
+    }
+  }
+}

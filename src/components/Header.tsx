@@ -1,22 +1,28 @@
 import React, { useState } from 'react';
-import { Search, ShoppingBag, Menu, X, Youtube, Facebook, Instagram } from 'lucide-react';
+import { Search, ShoppingBag, Menu, X, Youtube, Facebook, Instagram, User as UserIcon, LogOut } from 'lucide-react';
 import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
 
 interface HeaderProps {
   currentPage: string;
   onNavigate: (page: string, param?: string) => void;
   onOpenSearch: () => void;
   onOpenDonate?: () => void;
+  onOpenAuth?: () => void;
+  onOpenAccount?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
   currentPage,
   onNavigate,
   onOpenSearch,
-  onOpenDonate
+  onOpenDonate,
+  onOpenAuth,
+  onOpenAccount
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { totalItems, setIsCartOpen } = useCart();
+  const { user, logout } = useAuth();
 
   const navLinks = [
     { id: 'home', label: 'HOME' },
@@ -82,7 +88,7 @@ export const Header: React.FC<HeaderProps> = ({
           </nav>
 
           {/* Right Action Icons */}
-          <div className="flex items-center space-x-1 sm:space-x-3 shrink-0">
+          <div className="flex items-center space-x-1 sm:space-x-2 shrink-0">
             
             {/* Social Icons (Desktop) */}
             <div className="hidden xl:flex items-center space-x-2 text-neutral-500 pr-2 border-r border-neutral-200">
@@ -138,11 +144,40 @@ export const Header: React.FC<HeaderProps> = ({
               )}
             </button>
 
+            {/* User Account / Public Sign-In */}
+            {user ? (
+              <button
+                onClick={onOpenAccount}
+                className="p-1 sm:px-2.5 sm:py-1 text-neutral-700 hover:text-[#C83338] transition-colors rounded-md hover:bg-neutral-100 flex items-center space-x-1.5 shrink-0"
+                aria-label="My Account"
+                title={`Signed in as ${user.name}`}
+              >
+                <div className="w-6 h-6 rounded-full bg-[#30203D] text-white flex items-center justify-center text-[11px] font-bold uppercase shadow-2xs">
+                  {user.name.charAt(0)}
+                </div>
+                <span className="hidden md:inline text-xs font-bold max-w-[70px] truncate text-neutral-800">
+                  {user.name.split(' ')[0]}
+                </span>
+              </button>
+            ) : (
+              <button
+                onClick={onOpenAuth}
+                className="p-1.5 sm:px-2.5 sm:py-1.5 text-neutral-700 hover:text-[#C83338] transition-colors rounded-md hover:bg-neutral-100 flex items-center space-x-1 shrink-0"
+                aria-label="Member Sign In"
+                title="Member Sign In / Register"
+              >
+                <UserIcon className="w-4 h-4 text-neutral-700" />
+                <span className="hidden sm:inline text-[11px] font-bold tracking-wider uppercase">
+                  Sign In
+                </span>
+              </button>
+            )}
+
             {/* DONATE BUTTON */}
             {onOpenDonate && (
               <button
                 onClick={onOpenDonate}
-                className="px-2 py-1.5 sm:px-4 sm:py-2 bg-[#C83338] hover:bg-[#b0282d] text-white text-[11px] sm:text-xs font-bold tracking-wider uppercase rounded-md shadow-xs transition flex items-center space-x-1 group shrink-0"
+                className="px-2 py-1.5 sm:px-3 sm:py-1.5 bg-[#C83338] hover:bg-[#b0282d] text-white text-[11px] sm:text-xs font-bold tracking-wider uppercase rounded-md shadow-xs transition flex items-center space-x-1 group shrink-0"
                 aria-label="Make a Donation or Offering"
               >
                 <span className="group-hover:scale-110 transition-transform">❤️</span>
@@ -189,6 +224,49 @@ export const Header: React.FC<HeaderProps> = ({
                 </button>
               );
             })}
+
+            {/* Mobile Member Sign In / Account Button */}
+            {user ? (
+              <div className="pt-2 border-t border-neutral-100 flex items-center justify-between">
+                <button
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    onOpenAccount?.();
+                  }}
+                  className="flex items-center space-x-2 text-left py-2 px-3 bg-neutral-100 rounded-md flex-1 mr-2"
+                >
+                  <div className="w-6 h-6 rounded-full bg-[#30203D] text-white flex items-center justify-center text-xs font-bold">
+                    {user.name.charAt(0)}
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-xs font-bold text-neutral-900 truncate">{user.name}</div>
+                    <div className="text-[10px] text-neutral-500 truncate">{user.email}</div>
+                  </div>
+                </button>
+                <button
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    logout();
+                  }}
+                  className="p-2 text-neutral-500 hover:text-red-600 rounded-md hover:bg-neutral-100"
+                  title="Sign Out"
+                >
+                  <LogOut className="w-4 h-4" />
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  onOpenAuth?.();
+                }}
+                className="mt-1 w-full py-2.5 px-3 border border-neutral-300 text-neutral-700 font-bold text-xs uppercase tracking-wider rounded-md flex items-center justify-center space-x-1.5 hover:bg-neutral-50"
+              >
+                <UserIcon className="w-4 h-4 text-neutral-600" />
+                <span>Member Sign In / Register</span>
+              </button>
+            )}
+
             {onOpenDonate && (
               <button
                 onClick={() => {

@@ -1,11 +1,19 @@
 {
   "users": [
     {
+      "uid": "usr_sagengraphix",
+      "name": "Administrator (Sagen Graphix)",
+      "email": "sagengraphix@gmail.com",
+      "role": "superadmin",
+      "passwordHash": "Admin2026!",
+      "createdAt": "2026-01-01T00:00:00Z"
+    },
+    {
       "uid": "usr_sorensam84",
       "name": "Pastor Samuel Soren",
       "email": "sorensam84@gmail.com",
       "role": "superadmin",
-      "passwordHash": "PastorSoren2026!",
+      "passwordHash": "Admin2026!",
       "createdAt": "2026-01-01T00:00:00Z"
     },
     {
@@ -13,7 +21,7 @@
       "name": "Pastor Samuel Soren",
       "email": "sorensam@gmail.com",
       "role": "superadmin",
-      "passwordHash": "PastorSamuel2026!",
+      "passwordHash": "Admin2026!",
       "createdAt": "2026-01-01T00:00:00Z"
     },
     {
@@ -21,7 +29,7 @@
       "name": "Pastor Samuel Soren",
       "email": "admin@samuelsoren.org",
       "role": "superadmin",
-      "passwordHash": "admin123",
+      "passwordHash": "Admin2026!",
       "createdAt": "2026-01-01T00:00:00Z"
     },
     {
@@ -29,8 +37,24 @@
       "name": "Editorial Team",
       "email": "editor@samuelsoren.org",
       "role": "editor",
-      "passwordHash": "editor123",
+      "passwordHash": "Admin2026!",
       "createdAt": "2026-01-01T00:00:00Z"
+    },
+    {
+      "uid": "usr_1794493114925_sepk2",
+      "name": "Test Member",
+      "email": "member_1794493114921@example.com",
+      "role": "public",
+      "passwordHash": "password123",
+      "createdAt": "2026-11-12T14:18:34.925Z"
+    },
+    {
+      "uid": "usr_1794493114933_w3ykw",
+      "name": "Restricted Member",
+      "email": "member_restricted_1794493114928@example.com",
+      "role": "public",
+      "passwordHash": "password123",
+      "createdAt": "2026-11-12T14:18:34.933Z"
     }
   ],
   "settings": {

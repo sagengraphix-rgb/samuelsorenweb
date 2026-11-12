@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { MapPin, Phone, Mail, Clock, Send, CheckCircle2, AlertCircle, ShieldCheck, Lock, Loader2 } from 'lucide-react';
 import { validateContactSubmission } from '../lib/validation';
+import { doc, setDoc } from 'firebase/firestore';
+import { db } from '../lib/firebase';
 
 export const ContactPage: React.FC = () => {
   const [fullName, setFullName] = useState('');
@@ -61,6 +63,26 @@ export const ContactPage: React.FC = () => {
       }
 
       setSubmittedId(data.submissionId);
+
+      // Mirror contact/prayer submission to Firebase Firestore
+      try {
+        if (data.submissionId) {
+          await setDoc(doc(db, 'contactSubmissions', data.submissionId), {
+            id: data.submissionId,
+            fullName,
+            email,
+            phone: phone || null,
+            category,
+            subject,
+            message,
+            status: 'new',
+            createdAt: new Date().toISOString()
+          });
+        }
+      } catch (fbErr) {
+        console.warn('Firestore contact submission mirror note:', fbErr);
+      }
+
       // Reset form
       setFullName('');
       setEmail('');

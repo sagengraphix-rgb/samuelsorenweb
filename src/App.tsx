@@ -7,6 +7,8 @@ import { SearchModal } from './components/SearchModal';
 import { CartDrawer } from './components/CartDrawer';
 import { CheckoutModal } from './components/CheckoutModal';
 import { DonationModal } from './components/DonationModal';
+import { PublicAuthModal } from './components/PublicAuthModal';
+import { UserAccountModal } from './components/UserAccountModal';
 import { HomePage } from './pages/HomePage';
 import { MinistryPage } from './pages/MinistryPage';
 import { BlogPage } from './pages/BlogPage';
@@ -21,6 +23,11 @@ export default function App() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isDonateOpen, setIsDonateOpen] = useState(false);
   const [donateCause, setDonateCause] = useState<string | undefined>(undefined);
+
+  // Separate Public Auth & User Account Modals
+  const [isPublicAuthOpen, setIsPublicAuthOpen] = useState(false);
+  const [publicAuthMode, setPublicAuthMode] = useState<'signin' | 'signup'>('signin');
+  const [isUserAccountOpen, setIsUserAccountOpen] = useState(false);
 
   // Parse path on initial load if user visited /admin or /blog etc.
   useEffect(() => {
@@ -55,6 +62,11 @@ export default function App() {
     setIsDonateOpen(true);
   };
 
+  const handleOpenPublicAuth = (mode: 'signin' | 'signup' = 'signin') => {
+    setPublicAuthMode(mode);
+    setIsPublicAuthOpen(true);
+  };
+
   return (
     <AuthProvider>
       <CartProvider>
@@ -67,6 +79,8 @@ export default function App() {
               onNavigate={handleNavigate}
               onOpenSearch={() => setIsSearchOpen(true)}
               onOpenDonate={() => handleOpenDonate()}
+              onOpenAuth={() => handleOpenPublicAuth('signin')}
+              onOpenAccount={() => setIsUserAccountOpen(true)}
             />
           )}
 
@@ -86,13 +100,18 @@ export default function App() {
             {currentPage === 'admin' && (
               <div>
                 {/* Admin Header with quick return to public website */}
-                <div className="bg-neutral-900 text-neutral-400 px-4 py-2 text-xs flex justify-between items-center border-b border-neutral-800">
-                  <span>Pastor Samuel Soren Ministries &middot; Management System</span>
+                <div className="bg-neutral-900 text-neutral-400 px-4 py-2.5 text-xs flex justify-between items-center border-b border-neutral-800">
+                  <div className="flex items-center space-x-2">
+                    <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                    <span className="font-semibold text-neutral-200">
+                      Pastor Samuel Soren Ministries &middot; Management System
+                    </span>
+                  </div>
                   <button
                     onClick={() => handleNavigate('home')}
-                    className="text-white hover:text-[#C83338] font-bold underline-offset-4 hover:underline"
+                    className="text-white hover:text-[#C83338] font-bold underline-offset-4 hover:underline flex items-center space-x-1"
                   >
-                    &larr; View Public Ministry Website
+                    <span>&larr; View Public Ministry Website</span>
                   </button>
                 </div>
                 <AdminDashboard />
@@ -122,6 +141,23 @@ export default function App() {
             isOpen={isDonateOpen}
             onClose={() => setIsDonateOpen(false)}
             initialCause={donateCause}
+          />
+
+          {/* Public Sign-In / Sign-Up Modal */}
+          <PublicAuthModal
+            isOpen={isPublicAuthOpen}
+            onClose={() => setIsPublicAuthOpen(false)}
+            onOpenAccount={() => setIsUserAccountOpen(true)}
+            onNavigateToAdmin={() => handleNavigate('admin')}
+            defaultMode={publicAuthMode}
+          />
+
+          {/* Public Member Account Dashboard Modal */}
+          <UserAccountModal
+            isOpen={isUserAccountOpen}
+            onClose={() => setIsUserAccountOpen(false)}
+            onNavigateToAdmin={() => handleNavigate('admin')}
+            onOpenDonate={() => handleOpenDonate()}
           />
 
         </div>

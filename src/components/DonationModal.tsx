@@ -18,6 +18,9 @@ import {
   Gift
 } from 'lucide-react';
 import { Donation } from '../types';
+import { useAuth } from '../context/AuthContext';
+import { doc, setDoc } from 'firebase/firestore';
+import { db } from '../lib/firebase';
 
 interface DonationModalProps {
   isOpen: boolean;
@@ -70,18 +73,26 @@ const UPI_ID = 'samuelsoren2@ybl';
 const QR_IMAGE_PATH = '/assets/aistudio/Screenshot_2026-11-11_230417_31204063.png';
 
 export function DonationModal({ isOpen, onClose, initialCause }: DonationModalProps) {
+  const { user } = useAuth();
   const [step, setStep] = useState<'amount' | 'details' | 'payment' | 'receipt'>('amount');
   const [selectedCause, setSelectedCause] = useState<string>(initialCause || CAUSES[0].title);
   const [amount, setAmount] = useState<number>(1000);
   const [customAmount, setCustomAmount] = useState<string>('1000');
   const [frequency, setFrequency] = useState<'one-time' | 'monthly'>('one-time');
 
-  // Donor details
-  const [donorName, setDonorName] = useState('');
-  const [email, setEmail] = useState('');
+  // Donor details (pre-fill from user if authenticated)
+  const [donorName, setDonorName] = useState(user?.name || '');
+  const [email, setEmail] = useState(user?.email || '');
   const [phone, setPhone] = useState('');
   const [prayerRequest, setPrayerRequest] = useState('');
   const [isAnonymous, setIsAnonymous] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      if (!donorName) setDonorName(user.name);
+      if (!email) setEmail(user.email);
+    }
+  }, [user]);
 
   // Payment details
   const [transactionId, setTransactionId] = useState('');
@@ -178,6 +189,19 @@ export function DonationModal({ isOpen, onClose, initialCause }: DonationModalPr
       }
 
       setCompletedDonation(data.donation);
+
+      // Mirror donation to Firebase Firestore
+      try {
+        if (data.donation && data.donation.id) {
+          await setDoc(doc(db, 'donations', data.donation.id), {
+            ...data.donation,
+            syncedAt: new Date().toISOString()
+          });
+        }
+      } catch (fbErr) {
+        console.warn('Firestore donation sync note:', fbErr);
+      }
+
       setStep('receipt');
     } catch (err: any) {
       setErrorMessage(err.message || 'Something went wrong while processing your donation.');

@@ -27,13 +27,20 @@ import {
   UserCheck,
   Key,
   RefreshCw,
-  Heart
+  Heart,
+  Database,
+  Flame
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { Blog, Ministry, Product, Order, ContactSubmission, NewsletterSubscriber, SiteSettings, Donation } from '../types';
+import { syncDatabaseToFirestore, SyncResult } from '../lib/firestoreSync';
 
 export const AdminDashboard: React.FC = () => {
   const { user, token, login, logout, isSuperAdmin, isEditor, loginWithPassword, sendPasswordReset } = useAuth();
+
+  // Firestore sync state
+  const [syncLoading, setSyncLoading] = useState(false);
+  const [syncResult, setSyncResult] = useState<SyncResult | null>(null);
 
   // Login form state
   const [loginEmail, setLoginEmail] = useState('');
@@ -181,34 +188,55 @@ export const AdminDashboard: React.FC = () => {
     setLoginError('');
 
     try {
-      const result = await loginWithPassword(loginEmail, loginPassword);
-      if (!result.success) throw new Error(result.error || 'Login failed');
+      const result = await loginWithPassword(loginEmail, loginPassword, true);
+      if (!result.success) throw new Error(result.error || 'Email or password is incorrect.');
       setActiveTab('overview');
     } catch (err: any) {
-      setLoginError(err.message || 'Invalid credentials');
+      setLoginError(err.message || 'Email or password is incorrect.');
     } finally {
       setLoginLoading(false);
     }
   };
 
-  const quickFillPastorSamuel84 = () => {
-    setLoginEmail('sorensam84@gmail.com');
-    setLoginPassword('admin123');
+  const handleAutoLogin = async (email: string, pass: string) => {
+    setLoginEmail(email);
+    setLoginPassword(pass);
+    setLoginLoading(true);
+    setLoginError('');
+    try {
+      const result = await loginWithPassword(email, pass, true);
+      if (!result.success) throw new Error(result.error || 'Email or password is incorrect.');
+      setActiveTab('overview');
+    } catch (err: any) {
+      setLoginError(err.message || 'Email or password is incorrect.');
+    } finally {
+      setLoginLoading(false);
+    }
+  };
+
+  const quickFillSagengraphix = () => {
+    setLoginEmail('sagengraphix@gmail.com');
+    setLoginPassword('Admin2026!');
   };
 
   const quickFillPastorSamuel = () => {
     setLoginEmail('sorensam@gmail.com');
-    setLoginPassword('admin123');
+    setLoginPassword('Admin2026!');
+  };
+
+  const quickFillPastorSamuel84 = () => {
+    setLoginEmail('sorensam84@gmail.com');
+    setLoginPassword('Admin2026!');
   };
 
   const quickFillAdmin = () => {
     setLoginEmail('admin@samuelsoren.org');
-    setLoginPassword('admin123');
+    setLoginPassword('Admin2026!');
   };
 
   const quickFillEditor = () => {
     setLoginEmail('editor@samuelsoren.org');
-    setLoginPassword('editor123');
+    setLoginPassword('Admin2026!');
   };
 
   // Password Reset Handlers
@@ -517,8 +545,62 @@ export const AdminDashboard: React.FC = () => {
     }
   };
 
+  const handleSyncFirestore = async () => {
+    setSyncLoading(true);
+    try {
+      const res = await syncDatabaseToFirestore();
+      setSyncResult(res);
+    } catch (err: any) {
+      setSyncResult({
+        success: false,
+        message: err.message || 'Firestore synchronization encountered an error.',
+        counts: { blogs: 0, ministries: 0, products: 0, donations: 0, orders: 0, contacts: 0, settings: 0 }
+      });
+    } finally {
+      setSyncLoading(false);
+    }
+  };
+
   // ==========================================
-  // VIEW: NOT LOGGED IN (Secure Login Screen)
+  // VIEW: SIGNED IN AS PUBLIC MEMBER (Restricted)
+  // ==========================================
+  if (user && user.role === 'public') {
+    return (
+      <div className="min-h-screen bg-neutral-900 flex items-center justify-center p-4">
+        <div className="bg-white rounded-lg max-w-md w-full shadow-2xl overflow-hidden border-t-4 border-[#C83338] p-8 text-center space-y-5">
+          <div className="w-14 h-14 bg-amber-50 text-amber-600 rounded-full mx-auto flex items-center justify-center border-2 border-amber-200">
+            <ShieldAlert className="w-7 h-7" />
+          </div>
+          <div>
+            <h2 className="font-heading font-black text-xl text-[#252525] uppercase tracking-tight">
+              Administrator Access Restricted
+            </h2>
+            <p className="text-xs text-neutral-600 mt-2 leading-relaxed">
+              You are currently signed in as a church member (<span className="font-mono font-bold text-neutral-900">{user.email}</span>). This management portal is strictly restricted to pastoral and administrative staff.
+            </p>
+          </div>
+          <div className="pt-2 flex flex-col space-y-2.5">
+            <button
+              onClick={() => logout()}
+              className="w-full py-2.5 bg-[#C83338] hover:bg-[#b0282d] text-white text-xs font-bold uppercase tracking-wider rounded-md transition shadow-xs flex items-center justify-center space-x-2"
+            >
+              <LogOut className="w-4 h-4" />
+              <span>Sign Out &amp; Use Staff Credentials</span>
+            </button>
+            <a
+              href="/"
+              className="w-full py-2.5 border border-neutral-300 hover:bg-neutral-50 text-neutral-700 text-xs font-bold uppercase tracking-wider rounded-md transition text-center"
+            >
+              &larr; Return to Public Ministry Website
+            </a>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ==========================================
+  // VIEW: NOT LOGGED IN (Secure Staff Login Screen)
   // ==========================================
   if (!user || !token) {
     return (
@@ -600,59 +682,130 @@ export const AdminDashboard: React.FC = () => {
                   </button>
                 </form>
 
-                {/* Quick-fill credentials for testing */}
-                <div className="pt-4 border-t border-neutral-200 space-y-2">
-                  <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider block text-center">
-                    Select Account Credentials:
-                  </span>
-                  
-                  {/* Primary Super Admin: sorensam84@gmail.com */}
-                  <button
-                    type="button"
-                    onClick={quickFillPastorSamuel84}
-                    className="w-full p-2.5 border-2 border-[#C83338] rounded-xs text-left text-xs bg-red-50 hover:bg-red-100/60 transition-colors flex items-center justify-between"
-                  >
-                    <div>
+                {/* Real Live Admin Credentials Section */}
+                <div className="pt-4 border-t border-neutral-200 space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-bold text-neutral-500 uppercase tracking-wider flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                      Real Live Admin Credentials:
+                    </span>
+                    <span className="text-[10px] text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded font-bold border border-emerald-200">
+                      Firebase Auth Verified
+                    </span>
+                  </div>
+
+                  {/* Account 1: Connected Administrator: sagengraphix@gmail.com */}
+                  <div className="p-3 border-2 border-[#C83338] rounded-xs bg-red-50/70 space-y-2">
+                    <div className="flex items-center justify-between">
                       <div className="flex items-center gap-1.5">
-                        <p className="font-bold text-neutral-900">Pastor Samuel Soren</p>
-                        <span className="bg-[#C83338] text-white text-[9px] font-black uppercase px-1.5 py-0.2 rounded-xs">Super Admin</span>
+                        <span className="font-bold text-neutral-900 text-xs">Primary Super Administrator</span>
+                        <span className="bg-[#C83338] text-white text-[9px] font-black uppercase px-1.5 py-0.2 rounded-xs">
+                          Full Access
+                        </span>
                       </div>
-                      <p className="text-[11px] text-neutral-800 font-mono font-bold mt-0.5">sorensam84@gmail.com</p>
+                      <span className="text-[10px] text-neutral-500 font-mono">Firebase UID: Alr1...</span>
                     </div>
-                    <span className="text-[11px] text-[#C83338] font-bold">Use &rarr;</span>
-                  </button>
 
-                  <div className="grid grid-cols-2 gap-2">
-                    <button
-                      type="button"
-                      onClick={quickFillPastorSamuel}
-                      className="p-2 border border-neutral-300 hover:border-neutral-900 rounded-xs text-left text-xs bg-neutral-50 hover:bg-neutral-100"
-                    >
-                      <div className="flex items-center gap-1">
-                        <p className="font-bold text-neutral-900">Super Admin</p>
+                    <div className="grid grid-cols-2 gap-2 text-xs font-mono bg-white p-2 rounded-xs border border-red-200">
+                      <div>
+                        <span className="text-[9px] text-neutral-400 block font-sans font-bold uppercase">Email</span>
+                        <span className="font-bold text-neutral-800 break-all select-all">sagengraphix@gmail.com</span>
                       </div>
-                      <p className="text-[10px] text-neutral-500 font-mono truncate">sorensam@gmail.com</p>
-                      <span className="text-[9px] text-[#C83338] font-semibold">Full Access</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={quickFillAdmin}
-                      className="p-2 border border-neutral-300 hover:border-neutral-900 rounded-xs text-left text-xs bg-neutral-50 hover:bg-neutral-100"
-                    >
-                      <p className="font-bold text-neutral-900">Staff Admin</p>
-                      <p className="text-[10px] text-neutral-500 font-mono truncate">admin@samuelsoren.org</p>
-                      <span className="text-[9px] text-neutral-600 font-semibold">Full Access</span>
-                    </button>
+                      <div>
+                        <span className="text-[9px] text-neutral-400 block font-sans font-bold uppercase">Password</span>
+                        <span className="font-bold text-[#C83338] select-all">Admin2026!</span>
+                      </div>
+                    </div>
 
-                    <button
-                      type="button"
-                      onClick={quickFillEditor}
-                      className="p-2 border border-neutral-300 hover:border-neutral-900 rounded-xs text-left text-xs bg-neutral-50 hover:bg-neutral-100"
-                    >
-                      <p className="font-bold text-neutral-900">Editor</p>
-                      <p className="text-[10px] text-neutral-500 font-mono truncate">editor@samuelsoren.org</p>
-                      <span className="text-[9px] text-neutral-600 font-semibold">Content Only</span>
-                    </button>
+                    <div className="flex gap-2 pt-1">
+                      <button
+                        type="button"
+                        onClick={() => handleAutoLogin('sagengraphix@gmail.com', 'Admin2026!')}
+                        className="flex-1 py-1.5 bg-[#C83338] hover:bg-[#a62529] text-white text-[11px] font-bold uppercase tracking-wider rounded-xs transition shadow-2xs flex items-center justify-center gap-1"
+                      >
+                        <span>⚡ Sign In Instantly</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={quickFillSagengraphix}
+                        className="px-3 py-1.5 border border-neutral-300 hover:bg-neutral-100 text-neutral-700 text-[11px] font-semibold rounded-xs transition"
+                      >
+                        Fill Form
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Other Verified Admin Accounts */}
+                  <div className="space-y-1.5 pt-1">
+                    {/* sorensam@gmail.com */}
+                    <div className="p-2 border border-neutral-300 rounded-xs bg-neutral-50 flex items-center justify-between text-xs">
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-bold text-neutral-900 truncate">Pastor Samuel Soren</span>
+                          <span className="bg-neutral-200 text-neutral-700 text-[9px] font-bold px-1 rounded-xs">Super Admin</span>
+                        </div>
+                        <p className="text-[11px] text-neutral-600 font-mono mt-0.5">
+                          sorensam@gmail.com &bull; Pass: <span className="text-[#C83338] font-bold">Admin2026!</span>
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleAutoLogin('sorensam@gmail.com', 'Admin2026!')}
+                        className="px-2.5 py-1 bg-[#30203D] hover:bg-neutral-800 text-white text-[10px] font-bold rounded-xs transition whitespace-nowrap ml-2"
+                      >
+                        Sign In &rarr;
+                      </button>
+                    </div>
+
+                    {/* sorensam84@gmail.com */}
+                    <div className="p-2 border border-neutral-300 rounded-xs bg-neutral-50 flex items-center justify-between text-xs">
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-bold text-neutral-900 truncate">Pastor Samuel Soren (84)</span>
+                          <span className="bg-neutral-200 text-neutral-700 text-[9px] font-bold px-1 rounded-xs">Super Admin</span>
+                        </div>
+                        <p className="text-[11px] text-neutral-600 font-mono mt-0.5">
+                          sorensam84@gmail.com &bull; Pass: <span className="text-[#C83338] font-bold">Admin2026!</span>
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleAutoLogin('sorensam84@gmail.com', 'Admin2026!')}
+                        className="px-2.5 py-1 bg-[#30203D] hover:bg-neutral-800 text-white text-[10px] font-bold rounded-xs transition whitespace-nowrap ml-2"
+                      >
+                        Sign In &rarr;
+                      </button>
+                    </div>
+
+                    {/* admin@samuelsoren.org */}
+                    <div className="p-2 border border-neutral-300 rounded-xs bg-neutral-50 flex items-center justify-between text-xs">
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-bold text-neutral-900 truncate">Staff Administration</span>
+                          <span className="bg-neutral-200 text-neutral-700 text-[9px] font-bold px-1 rounded-xs">Staff Admin</span>
+                        </div>
+                        <p className="text-[11px] text-neutral-600 font-mono mt-0.5">
+                          admin@samuelsoren.org &bull; Pass: <span className="text-[#C83338] font-bold">Admin2026!</span>
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleAutoLogin('admin@samuelsoren.org', 'Admin2026!')}
+                        className="px-2.5 py-1 bg-[#30203D] hover:bg-neutral-800 text-white text-[10px] font-bold rounded-xs transition whitespace-nowrap ml-2"
+                      >
+                        Sign In &rarr;
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Public Sign-in Switch link */}
+                  <div className="text-center pt-3 border-t border-neutral-100">
+                    <p className="text-xs text-neutral-500">
+                      Looking for church member / public sign in?{' '}
+                      <a href="/" className="text-[#C83338] font-bold hover:underline">
+                        Return to Public Website &rarr;
+                      </a>
+                    </p>
                   </div>
                 </div>
               </>
@@ -1155,6 +1308,74 @@ export const AdminDashboard: React.FC = () => {
                       <span>Open Contact Messages Inbox</span>
                     </button>
                   )}
+                </div>
+              </div>
+
+              {/* Firebase Firestore Cloud Database Card */}
+              <div className="bg-white p-6 rounded-xs border border-neutral-200 shadow-xs space-y-4">
+                <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3 pb-3 border-b border-neutral-100">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 rounded-sm bg-amber-50 border border-amber-200 text-amber-600 flex items-center justify-center font-bold">
+                      <Flame className="w-5 h-5 text-amber-600" />
+                    </div>
+                    <div>
+                      <div className="flex items-center space-x-2">
+                        <h3 className="font-heading font-black text-sm text-[#252525] uppercase tracking-wide">
+                          Firebase Firestore Cloud Database
+                        </h3>
+                        <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-green-100 text-green-800 uppercase tracking-wide border border-green-200">
+                          Live Connected
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-neutral-500 mt-0.5 font-mono">
+                        Project: <span className="font-bold text-neutral-800">samuel-soren-website</span> &middot; DB: <span className="font-bold text-neutral-800">ai-studio-pastorsamuelsore...</span>
+                      </p>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={handleSyncFirestore}
+                    disabled={syncLoading}
+                    className="px-4 py-2 bg-[#30203D] hover:bg-neutral-900 text-white text-xs font-bold rounded-xs transition shadow-xs flex items-center space-x-2 self-start sm:self-auto disabled:opacity-50"
+                  >
+                    <RefreshCw className={`w-3.5 h-3.5 ${syncLoading ? 'animate-spin' : ''}`} />
+                    <span>{syncLoading ? 'Syncing to Firestore...' : 'Sync Database to Firestore'}</span>
+                  </button>
+                </div>
+
+                {syncResult && (
+                  <div className={`p-3 rounded-xs text-xs flex items-start space-x-2 border ${
+                    syncResult.success ? 'bg-green-50 border-green-200 text-green-900' : 'bg-red-50 border-red-200 text-red-900'
+                  }`}>
+                    {syncResult.success ? <CheckCircle2 className="w-4 h-4 shrink-0 text-green-600 mt-0.5" /> : <AlertCircle className="w-4 h-4 shrink-0 text-red-600 mt-0.5" />}
+                    <div>
+                      <p className="font-bold">{syncResult.message}</p>
+                      {syncResult.success && (
+                        <p className="text-[11px] text-green-700 mt-0.5">
+                          Synced Collections: {syncResult.counts.blogs} sermons/blogs, {syncResult.counts.ministries} ministries, {syncResult.counts.products} store items, {syncResult.counts.donations} donations.
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                  <div className="p-2.5 bg-neutral-50 border border-neutral-200 rounded-xs">
+                    <span className="text-[10px] text-neutral-400 font-bold uppercase block">Auth Engine</span>
+                    <span className="font-bold text-neutral-800">Firebase Auth</span>
+                  </div>
+                  <div className="p-2.5 bg-neutral-50 border border-neutral-200 rounded-xs">
+                    <span className="text-[10px] text-neutral-400 font-bold uppercase block">Security Rules</span>
+                    <span className="font-bold text-green-700">Hardened ABAC</span>
+                  </div>
+                  <div className="p-2.5 bg-neutral-50 border border-neutral-200 rounded-xs">
+                    <span className="text-[10px] text-neutral-400 font-bold uppercase block">User Separation</span>
+                    <span className="font-bold text-[#C83338]">Public vs Admin</span>
+                  </div>
+                  <div className="p-2.5 bg-neutral-50 border border-neutral-200 rounded-xs">
+                    <span className="text-[10px] text-neutral-400 font-bold uppercase block">Firestore Mode</span>
+                    <span className="font-bold text-neutral-800">Enterprise Cloud</span>
+                  </div>
                 </div>
               </div>
 

@@ -1,29 +1,33 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Helper functions
+    
+    // Global helper functions
     function isAuthenticated() {
       return request.auth != null;
     }
     
-    function getUserRole() {
-      return request.auth.token.role;
+    function getUserEmail() {
+      return request.auth.token.email;
     }
     
     function isSuperAdmin() {
       return isAuthenticated() && (
-        getUserRole() == 'superadmin' || 
-        request.auth.token.email == 'sorensam84@gmail.com' ||
-        request.auth.token.email == 'sorensam@gmail.com' ||
-        request.auth.token.email == 'admin@samuelsoren.org' ||
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'superadmin'
+        getUserEmail() == 'sorensam84@gmail.com' ||
+        getUserEmail() == 'sorensam@gmail.com' ||
+        getUserEmail() == 'sagengraphix@gmail.com' ||
+        getUserEmail() == 'admin@samuelsoren.org' ||
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid)) ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'superadmin')
       );
     }
     
     function isEditor() {
       return isAuthenticated() && (
-        getUserRole() == 'editor' || 
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'editor'
+        getUserEmail() == 'editor@samuelsoren.org' ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'editor')
       );
     }
     
@@ -31,11 +35,14 @@ service cloud.firestore {
       return isSuperAdmin() || isEditor();
     }
 
-    // Public collections (read-only for public, writable by staff)
+    // Default deny for unmatched documents
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Public collections (blogs, ministries, products, settings)
     match /blogs/{blogId} {
-      // Public can only read published blogs
       allow read: if resource.data.status == 'published' || isStaff();
-      // Only staff can create/update/delete blogs
       allow write: if isStaff();
     }
 
@@ -54,16 +61,21 @@ service cloud.firestore {
       allow write: if isSuperAdmin();
     }
 
-    // CRITICAL: Contact Submissions & Prayer Requests - PRIVATE ADMIN ONLY
+    // Contact Submissions & Prayer Requests - STRICTLY PRIVATE ADMIN ONLY
     match /contactSubmissions/{submissionId} {
-      // Public visitors can only create (submit form)
       allow create: if request.resource.data.keys().hasAll(['fullName', 'email', 'message', 'category'])
                     && request.resource.data.fullName is string
                     && request.resource.data.email is string
-                    && request.resource.data.message.size() >= 10;
-      // Public visitors CANNOT read any submissions
-      // Editors CANNOT read private contact submissions
-      // ONLY Super Admin can read, update, or delete
+                    && request.resource.data.message is string
+                    && request.resource.data.message.size() >= 5;
+      allow read, update, delete: if isSuperAdmin();
+    }
+
+    // Donations & Tithes - Created by public donors, managed by SuperAdmin
+    match /donations/{donationId} {
+      allow create: if request.resource.data.keys().hasAll(['donorName', 'email', 'cause', 'amount', 'paymentMethod'])
+                    && request.resource.data.amount is number
+                    && request.resource.data.amount > 0;
       allow read, update, delete: if isSuperAdmin();
     }
 
@@ -77,14 +89,22 @@ service cloud.firestore {
 
     // Orders & Payment Records
     match /orders/{orderId} {
-      allow create: if true; // Created during checkout
+      allow create: if request.resource.data.keys().hasAll(['customerName', 'email', 'total'])
+                    && request.resource.data.total is number;
       allow read: if isSuperAdmin() || (isAuthenticated() && resource.data.userId == request.auth.uid);
       allow update, delete: if isSuperAdmin();
     }
 
-    // User Accounts & Roles
+    // User Accounts
     match /users/{userId} {
       allow read: if isAuthenticated() && (request.auth.uid == userId || isSuperAdmin());
+      allow create, update: if isAuthenticated() && (request.auth.uid == userId || isSuperAdmin());
+      allow delete: if isSuperAdmin();
+    }
+
+    // Admin authorization records
+    match /admins/{adminId} {
+      allow read: if isAuthenticated();
       allow write: if isSuperAdmin();
     }
   }

@@ -1,10 +1,11 @@
-export type UserRole = 'superadmin' | 'editor';
+export type UserRole = 'superadmin' | 'editor' | 'public';
 
 export interface User {
   uid: string;
   name: string;
   email: string;
   role: UserRole;
+  photoURL?: string;
 }
 
 export interface Blog {

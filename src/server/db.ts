@@ -208,6 +208,14 @@ const INITIAL_DB: DatabaseSchema = {
       createdAt: '2026-01-01T00:00:00Z'
     },
     {
+      uid: 'usr_sagengraphix',
+      name: 'Ministry Administrator',
+      email: 'sagengraphix@gmail.com',
+      role: 'superadmin',
+      passwordHash: 'Admin2026!',
+      createdAt: '2026-01-01T00:00:00Z'
+    },
+    {
       uid: 'usr_superadmin',
       name: 'Pastor Samuel Soren',
       email: 'admin@samuelsoren.org',
