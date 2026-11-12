@@ -198,47 +198,6 @@ export const AdminDashboard: React.FC = () => {
     }
   };
 
-  const handleAutoLogin = async (email: string, pass: string) => {
-    setLoginEmail(email);
-    setLoginPassword(pass);
-    setLoginLoading(true);
-    setLoginError('');
-    try {
-      const result = await loginWithPassword(email, pass, true);
-      if (!result.success) throw new Error(result.error || 'Email or password is incorrect.');
-      setActiveTab('overview');
-    } catch (err: any) {
-      setLoginError(err.message || 'Email or password is incorrect.');
-    } finally {
-      setLoginLoading(false);
-    }
-  };
-
-  const quickFillSagengraphix = () => {
-    setLoginEmail('sagengraphix@gmail.com');
-    setLoginPassword('Admin2026!');
-  };
-
-  const quickFillPastorSamuel = () => {
-    setLoginEmail('sorensam@gmail.com');
-    setLoginPassword('Admin2026!');
-  };
-
-  const quickFillPastorSamuel84 = () => {
-    setLoginEmail('sorensam84@gmail.com');
-    setLoginPassword('Admin2026!');
-  };
-
-  const quickFillAdmin = () => {
-    setLoginEmail('admin@samuelsoren.org');
-    setLoginPassword('Admin2026!');
-  };
-
-  const quickFillEditor = () => {
-    setLoginEmail('editor@samuelsoren.org');
-    setLoginPassword('Admin2026!');
-  };
-
   // Password Reset Handlers
   const handleRequestResetCode = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -637,7 +596,7 @@ export const AdminDashboard: React.FC = () => {
                     <input
                       type="email"
                       required
-                      placeholder="sorensam84@gmail.com"
+                      placeholder="admin@example.com"
                       value={loginEmail}
                       onChange={(e) => setLoginEmail(e.target.value)}
                       className="w-full px-3 py-2 text-sm border border-neutral-300 rounded-xs focus:ring-1 focus:ring-[#C83338] focus:border-[#C83338] outline-hidden"
@@ -652,7 +611,7 @@ export const AdminDashboard: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => {
-                          setResetEmail(loginEmail || 'sorensam84@gmail.com');
+                          setResetEmail(loginEmail || '');
                           setIsResetMode(true);
                           setResetStep('request');
                           setResetError('');
@@ -682,131 +641,18 @@ export const AdminDashboard: React.FC = () => {
                   </button>
                 </form>
 
-                {/* Real Live Admin Credentials Section */}
-                <div className="pt-4 border-t border-neutral-200 space-y-2.5">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-bold text-neutral-500 uppercase tracking-wider flex items-center gap-1.5">
-                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                      Real Live Admin Credentials:
-                    </span>
-                    <span className="text-[10px] text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded font-bold border border-emerald-200">
-                      Firebase Auth Verified
-                    </span>
+                {/* Secure Portal Footer */}
+                <div className="pt-4 border-t border-neutral-200 text-center space-y-3">
+                  <div className="flex items-center justify-center gap-1.5 text-xs text-neutral-500">
+                    <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                    <span>Authorized Pastoral &amp; Ministry Staff Only</span>
                   </div>
-
-                  {/* Account 1: Connected Administrator: sagengraphix@gmail.com */}
-                  <div className="p-3 border-2 border-[#C83338] rounded-xs bg-red-50/70 space-y-2">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-1.5">
-                        <span className="font-bold text-neutral-900 text-xs">Primary Super Administrator</span>
-                        <span className="bg-[#C83338] text-white text-[9px] font-black uppercase px-1.5 py-0.2 rounded-xs">
-                          Full Access
-                        </span>
-                      </div>
-                      <span className="text-[10px] text-neutral-500 font-mono">Firebase UID: Alr1...</span>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-2 text-xs font-mono bg-white p-2 rounded-xs border border-red-200">
-                      <div>
-                        <span className="text-[9px] text-neutral-400 block font-sans font-bold uppercase">Email</span>
-                        <span className="font-bold text-neutral-800 break-all select-all">sagengraphix@gmail.com</span>
-                      </div>
-                      <div>
-                        <span className="text-[9px] text-neutral-400 block font-sans font-bold uppercase">Password</span>
-                        <span className="font-bold text-[#C83338] select-all">Admin2026!</span>
-                      </div>
-                    </div>
-
-                    <div className="flex gap-2 pt-1">
-                      <button
-                        type="button"
-                        onClick={() => handleAutoLogin('sagengraphix@gmail.com', 'Admin2026!')}
-                        className="flex-1 py-1.5 bg-[#C83338] hover:bg-[#a62529] text-white text-[11px] font-bold uppercase tracking-wider rounded-xs transition shadow-2xs flex items-center justify-center gap-1"
-                      >
-                        <span>⚡ Sign In Instantly</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={quickFillSagengraphix}
-                        className="px-3 py-1.5 border border-neutral-300 hover:bg-neutral-100 text-neutral-700 text-[11px] font-semibold rounded-xs transition"
-                      >
-                        Fill Form
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Other Verified Admin Accounts */}
-                  <div className="space-y-1.5 pt-1">
-                    {/* sorensam@gmail.com */}
-                    <div className="p-2 border border-neutral-300 rounded-xs bg-neutral-50 flex items-center justify-between text-xs">
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-1.5">
-                          <span className="font-bold text-neutral-900 truncate">Pastor Samuel Soren</span>
-                          <span className="bg-neutral-200 text-neutral-700 text-[9px] font-bold px-1 rounded-xs">Super Admin</span>
-                        </div>
-                        <p className="text-[11px] text-neutral-600 font-mono mt-0.5">
-                          sorensam@gmail.com &bull; Pass: <span className="text-[#C83338] font-bold">Admin2026!</span>
-                        </p>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => handleAutoLogin('sorensam@gmail.com', 'Admin2026!')}
-                        className="px-2.5 py-1 bg-[#30203D] hover:bg-neutral-800 text-white text-[10px] font-bold rounded-xs transition whitespace-nowrap ml-2"
-                      >
-                        Sign In &rarr;
-                      </button>
-                    </div>
-
-                    {/* sorensam84@gmail.com */}
-                    <div className="p-2 border border-neutral-300 rounded-xs bg-neutral-50 flex items-center justify-between text-xs">
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-1.5">
-                          <span className="font-bold text-neutral-900 truncate">Pastor Samuel Soren (84)</span>
-                          <span className="bg-neutral-200 text-neutral-700 text-[9px] font-bold px-1 rounded-xs">Super Admin</span>
-                        </div>
-                        <p className="text-[11px] text-neutral-600 font-mono mt-0.5">
-                          sorensam84@gmail.com &bull; Pass: <span className="text-[#C83338] font-bold">Admin2026!</span>
-                        </p>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => handleAutoLogin('sorensam84@gmail.com', 'Admin2026!')}
-                        className="px-2.5 py-1 bg-[#30203D] hover:bg-neutral-800 text-white text-[10px] font-bold rounded-xs transition whitespace-nowrap ml-2"
-                      >
-                        Sign In &rarr;
-                      </button>
-                    </div>
-
-                    {/* admin@samuelsoren.org */}
-                    <div className="p-2 border border-neutral-300 rounded-xs bg-neutral-50 flex items-center justify-between text-xs">
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-1.5">
-                          <span className="font-bold text-neutral-900 truncate">Staff Administration</span>
-                          <span className="bg-neutral-200 text-neutral-700 text-[9px] font-bold px-1 rounded-xs">Staff Admin</span>
-                        </div>
-                        <p className="text-[11px] text-neutral-600 font-mono mt-0.5">
-                          admin@samuelsoren.org &bull; Pass: <span className="text-[#C83338] font-bold">Admin2026!</span>
-                        </p>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => handleAutoLogin('admin@samuelsoren.org', 'Admin2026!')}
-                        className="px-2.5 py-1 bg-[#30203D] hover:bg-neutral-800 text-white text-[10px] font-bold rounded-xs transition whitespace-nowrap ml-2"
-                      >
-                        Sign In &rarr;
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Public Sign-in Switch link */}
-                  <div className="text-center pt-3 border-t border-neutral-100">
-                    <p className="text-xs text-neutral-500">
-                      Looking for church member / public sign in?{' '}
-                      <a href="/" className="text-[#C83338] font-bold hover:underline">
-                        Return to Public Website &rarr;
-                      </a>
-                    </p>
-                  </div>
+                  <p className="text-xs text-neutral-500">
+                    Looking for church member / public sign in?{' '}
+                    <a href="/" className="text-[#C83338] font-bold hover:underline">
+                      Return to Public Website &rarr;
+                    </a>
+                  </p>
                 </div>
               </>
             ) : (
@@ -853,28 +699,11 @@ export const AdminDashboard: React.FC = () => {
                       <input
                         type="email"
                         required
-                        placeholder="sorensam84@gmail.com"
+                        placeholder="admin@example.com"
                         value={resetEmail}
                         onChange={(e) => setResetEmail(e.target.value)}
                         className="w-full px-3 py-2 text-sm border border-neutral-300 rounded-xs focus:ring-1 focus:ring-[#C83338] focus:border-[#C83338] outline-hidden"
                       />
-                    </div>
-
-                    <div className="flex flex-wrap gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setResetEmail('sorensam84@gmail.com')}
-                        className="px-2.5 py-1 text-[11px] font-semibold bg-red-100 hover:bg-red-200 text-red-900 rounded-xs border border-red-200"
-                      >
-                        Use sorensam84@gmail.com
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setResetEmail('sorensam@gmail.com')}
-                        className="px-2.5 py-1 text-[11px] font-semibold bg-neutral-100 hover:bg-neutral-200 rounded-xs text-neutral-700"
-                      >
-                        Use sorensam@gmail.com
-                      </button>
                     </div>
 
                     <button
